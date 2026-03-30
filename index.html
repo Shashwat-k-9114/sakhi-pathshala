@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>"/>
+<meta name="theme-color" content="#1a0a2e"/>
+<meta name="description" content="Sakhi — A beautiful, sacred game teaching menstrual health to girls worldwide"/>
+<meta property="og:title" content="Sakhi · सखी · Your Health Friend"/>
+<meta property="og:description" content="A divine educational game about menstrual hygiene for girls everywhere"/>
+<title>Sakhi · सखी · Your Sacred Health Journey</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Noto+Sans:wght@300;400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"/>
+
+<!-- GSAP CDN (no defer — must be available when buildMap runs) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+<style>
+/* ═══════════════════════════════════════════
+   SACRED GARDEN DESIGN SYSTEM
+═══════════════════════════════════════════ */
+:root {
+  /* Jewel Palette */
+  --midnight:   #0d0618;
+  --deep:       #1a0a2e;
+  --indigo:     #2d1b69;
+  --violet:     #6b21a8;
+  --rose:       #e11d48;
+  --rose-soft:  #fb7185;
+  --gold:       #f59e0b;
+  --gold-light: #fde68a;
+  --jasmine:    #fef9ee;
+  --teal:       #0f766e;
+  --teal-light: #5eead4;
+  --petal:      #fda4af;
+  --cream:      #fff8f0;
+
+  /* Gradients */
+  --g-night:  linear-gradient(160deg, #0d0618 0%, #1a0a2e 40%, #2d1b69 100%);
+  --g-dawn:   linear-gradient(135deg, #e11d48 0%, #f59e0b 50%, #6b21a8 100%);
+  --g-bloom:  linear-gradient(135deg, #fda4af 0%, #f59e0b 100%);
+  --g-forest: linear-gradient(135deg, #0f766e 0%, #2d1b69 100%);
+  --g-sacred: linear-gradient(180deg, #1a0a2e 0%, #6b21a8 50%, #e11d48 100%);
+
+  /* Typography */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'Noto Sans', 'Noto Sans Devanagari', system-ui, sans-serif;
+
+  /* Spacing */
+  --r-sm: 12px;  --r-md: 20px;  --r-lg: 32px;  --r-xl: 48px;
+
+  /* Shadows */
+  --glow-rose:   0 0 40px rgba(225,29,72,.4);
+  --glow-gold:   0 0 40px rgba(245,158,11,.4);
+  --glow-violet: 0 0 40px rgba(107,33,168,.5);
+  --shadow-card: 0 20px 60px rgba(0,0,0,.5), 0 4px 20px rgba(0,0,0,.3);
+
+  /* Timing */
+  --ease-bloom: cubic-bezier(.16,1,.3,1);
+  --ease-petals: cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ── RESET & BASE ── */
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; font-size:16px; }
+body {
+  font-family: var(--font-body);
+  background: var(--midnight);
+  color: var(--jasmine);
+  overflow-x: hidden;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: rgba(225,29,72,.35); color:#fff; }
+
+/* ── SCREENS ── */
+.screen {
+  position: fixed; inset: 0;
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  overflow: hidden;
+  z-index: 10;
+}
+.screen.active { display: flex; }
+.screen-scroll {
+  position: fixed; inset: 0;
+  display: none; flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* always stack from top, never center-clip content */
+  overflow-y: auto; overflow-x: hidden;
+  z-index: 10;
+  padding-bottom: 40px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245,158,11,.3) transparent;
+}
+.screen-scroll.active { display: flex; }
+
+/* ── CANVAS BACKGROUND ── */
+#bg-canvas {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: .7;
+}
+
+/* ── PARTICLE FIELD ── */
+.particle-field {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  overflow: hidden;
+}
+.petal {
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 50% 0;
+  opacity: 0;
+  animation: drift linear infinite;
+}
+@keyframes drift {
+  0%   { transform: translateY(100vh) rotate(0deg) scale(0); opacity:0; }
+  5%   { opacity:.8; }
+  95%  { opacity:.3; }
+  100% { transform: translateY(-10vh) rotate(720deg) scale(.5); opacity:0; }
+}
+
+/* ── OFFLINE BAR ── */
+#offline-bar {
+  position: fixed; top:0; left:0; right:0;
+  background: linear-gradient(90deg, #92400e, #b45309);
+  color: #fff; font-size: .78rem; font-weight: 700;
+  text-align: center; padding: 8px 16px;
+  z-index: 9999; display: none;
+  letter-spacing: .3px;
+}
+#offline-bar.show { display: block; }
+
+/* ── LOADING SCREEN ── */
+#s-loading {
+  background: var(--g-night);
+  z-index: 9999;
+}
+.loader-mandala {
+  width: 120px; height: 120px;
+  position: relative;
+}
+.loader-ring {
+  position: absolute; inset: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin linear infinite;
+}
+.loader-ring:nth-child(1) { border-top-color: var(--gold); animation-duration: 1.2s; }
+.loader-ring:nth-child(2) { inset: 12px; border-right-color: var(--rose); animation-duration: 1.8s; animation-direction: reverse; }
+.loader-ring:nth-child(3) { inset: 24px; border-bottom-color: var(--teal-light); animation-duration: 2.4s; }
+.loader-bloom { position: absolute; inset: 36px; display: flex; align-items: center; justify-content: center; font-size: 2.4rem; animation: pulse-slow 2s ease-in-out infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse-slow { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+.loader-text { margin-top: 24px; font-family: var(--font-display); font-size: 1.4rem; color: var(--gold-light); letter-spacing: 2px; animation: pulse-slow 2s ease-in-out infinite; }
+.loader-sub { font-size: .8rem; color: rgba(255,255,255,.4); margin-top: 6px; letter-spacing: 1px; }
+
+/* ── HERO / SPLASH ── */
+#s-hero {
+  background: var(--g-night);
+  position: relative;
+}
+.hero-mandala {
+  position: absolute;
+  width: 120vmax; height: 120vmax;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+  opacity: .12;
+  animation: spin 60s linear infinite;
+}
+.hero-content {
+  position: relative; z-index: 5;
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center;
+  padding: 40px 24px;
+  max-width: 560px;
+}
+.hero-flower {
+  font-size: clamp(60px, 15vw, 100px);
+  margin-bottom: 8px;
+  display: block;
+  animation: bloom-in 1.2s var(--ease-bloom) both;
+  filter: drop-shadow(0 0 30px rgba(245,158,11,.6));
+}
+@keyframes bloom-in {
+  from { transform: scale(0) rotate(-180deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);   opacity: 1; }
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 10vw, 5.5rem);
+  font-weight: 900;
+  line-height: 1;
+  background: var(--g-dawn);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+  animation: slide-up .8s var(--ease-bloom) .3s both;
+}
+.hero-sanskrit {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  color: rgba(253,230,138,.7);
+  letter-spacing: 4px;
+  font-style: italic;
+  animation: slide-up .8s var(--ease-bloom) .5s both;
+}
+.hero-tagline {
+  font-size: clamp(.9rem, 2.5vw, 1.1rem);
+  color: rgba(255,255,255,.65);
+  margin: 20px 0 36px;
+  line-height: 1.6;
+  max-width: 400px;
+  animation: slide-up .8s var(--ease-bloom) .7s both;
+}
+@keyframes slide-up {
+  from { transform: translateY(30px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.hero-btn {
+  position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  animation: slide-up .8s var(--ease-bloom) .9s both;
+}
+.hero-btn-inner {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--g-dawn);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 18px 42px;
+  border-radius: 100px;
+  box-shadow: var(--glow-rose), 0 8px 32px rgba(0,0,0,.4);
+  transition: transform .2s var(--ease-petals), box-shadow .2s;
+  letter-spacing: .5px;
+}
+.hero-btn:active .hero-btn-inner { transform: scale(.96); }
+.hero-btn::after {
+  content: '';
+  position: absolute; inset: -3px;
+  border-radius: 100px;
+  background: var(--g-dawn);
+  opacity: .3;
+  animation: pulse-ring 2s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(1); opacity: .4; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+.hero-langs {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 28px;
+  animation: slide-up .8s var(--ease-bloom) 1.1s both;
+}
+.hero-lang-pip {
+  font-size: .7rem; font-weight: 700;
+  color: rgba(255,255,255,.5);
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 20px;
+  padding: 4px 10px;
+  letter-spacing: .5px;
+}
+
+/* ── LANGUAGE SELECT ── */
+#s-lang { background: var(--g-night); }
+.lang-header {
+  text-align: center;
+  padding: 48px 24px 32px;
+  position: relative; z-index: 5;
+}
+.lang-header-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-weight: 700;
+  color: var(--gold-light);
+  margin-bottom: 8px;
+}
+.lang-header-sub {
+  font-size: .95rem;
+  color: rgba(255,255,255,.5);
+  letter-spacing: 1px;
+}
+.lang-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  padding: 0 20px;
+  width: 100%; max-width: 600px;
+  position: relative; z-index: 5;
+}
+.lang-card {
+  background: rgba(255,255,255,.04);
+  border: 1.5px solid rgba(255,255,255,.1);
+  border-radius: var(--r-lg);
+  padding: 22px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .25s var(--ease-bloom);
+  position: relative; overflow: hidden;
+}
+.lang-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: var(--g-dawn);
+  opacity: 0;
+  transition: opacity .25s;
+}
+.lang-card:hover, .lang-card.playing {
+  border-color: rgba(245,158,11,.6);
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 12px 40px rgba(245,158,11,.2);
+}
+.lang-card.playing::before { opacity: .12; }
+.lang-card.selected {
+  border-color: var(--gold);
+  background: rgba(245,158,11,.12);
+  box-shadow: var(--glow-gold);
+}
+.lang-card.selected::before { opacity: .15; }
+.lang-em { font-size: 2.2rem; margin-bottom: 8px; position: relative; z-index: 1; display: block; }
+.lang-name { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: #fff; position: relative; z-index: 1; }
+.lang-roman { font-size: .7rem; color: rgba(255,255,255,.4); margin-top: 2px; position: relative; z-index: 1; letter-spacing: .5px; }
+.lang-playing-dot {
+  width: 8px; height: 8px;
+  background: var(--gold);
+  border-radius: 50%;
+  position: absolute; top: 12px; right: 12px;
+  display: none;
+  animation: pulse-slow 1s ease-in-out infinite;
+}
+.lang-card.playing .lang-playing-dot { display: block; }
+.lang-cta {
+  padding: 24px 20px 0;
+  width: 100%; max-width: 600px;
+  position: relative; z-index: 5;
+}
+.lang-cta-btn {
+  display: none; width: 100%;
+  background: var(--g-dawn);
+  color: #fff; border: none;
+  border-radius: 100px;
+  padding: 18px;
+  font-family: var(--font-display);
+  font-size: 1.15rem; font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--glow-rose);
+  transition: transform .18s var(--ease-petals);
+  letter-spacing: .5px;
+}
+.lang-cta-btn.show { display: block; animation: slide-up .4s var(--ease-bloom) both; }
+.lang-cta-btn:active { transform: scale(.97); }
+
+/* ── SETUP / SCHOOL ── */
+#s-setup { background: var(--g-night); }
+.setup-wrap {
+  width: 100%; max-width: 500px;
+  padding: 40px 24px;
+  position: relative; z-index: 5;
+}
+.setup-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem; font-weight: 700;
+  color: var(--gold-light);
+  margin-bottom: 6px; text-align: center;
+}
+.setup-sub { font-size: .88rem; color: rgba(255,255,255,.4); text-align: center; margin-bottom: 32px; }
+.field-group { margin-bottom: 20px; }
+.field-label { font-size: .75rem; font-weight: 700; color: rgba(255,255,255,.5); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; display: block; }
+.field-input, .field-select {
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1.5px solid rgba(255,255,255,.12);
+  border-radius: var(--r-md);
+  padding: 14px 18px;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 1rem; font-weight: 500;
+  transition: border-color .2s, box-shadow .2s;
+  -webkit-appearance: none;
+}
+.field-input::placeholder { color: rgba(255,255,255,.25); }
+.field-input:focus, .field-select:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245,158,11,.15);
+}
+.field-input.error { border-color: var(--rose); box-shadow: 0 0 0 3px rgba(225,29,72,.15); animation: shake .3s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+.field-select option { background: #1a0a2e; }
+.teacher-row {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,.04);
+  border: 1.5px solid rgba(255,255,255,.1);
+  border-radius: var(--r-md);
+  padding: 14px 18px;
+  margin-bottom: 28px;
+}
+.teacher-label { font-size: .92rem; font-weight: 600; color: rgba(255,255,255,.8); }
+.teacher-sub { font-size: .72rem; color: rgba(255,255,255,.35); margin-top: 2px; }
+.toggle { position: relative; width: 48px; height: 28px; flex-shrink: 0; }
+.toggle input { opacity:0; width:0; height:0; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,.15);
+  border-radius: 14px; cursor: pointer;
+  transition: background .25s;
+}
+.toggle-track::before {
+  content: '';
+  position: absolute;
+  height: 22px; width: 22px;
+  left: 3px; bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform .25s var(--ease-petals);
+}
+.toggle input:checked + .toggle-track { background: var(--teal); }
+.toggle input:checked + .toggle-track::before { transform: translateX(20px); }
+.setup-btn {
+  width: 100%;
+  background: var(--g-dawn);
+  color: #fff; border: none;
+  border-radius: 100px; padding: 18px;
+  font-family: var(--font-display);
+  font-size: 1.1rem; font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--glow-rose);
+  transition: transform .18s var(--ease-petals);
+  letter-spacing: .5px;
+}
+.setup-btn:active { transform: scale(.97); }
+.skip-link { display: block; text-align: center; margin-top: 16px; font-size: .82rem; color: rgba(255,255,255,.3); cursor: pointer; text-decoration: underline; }
+
+/* ── MODULE MAP ── */
+#s-map { background: var(--g-night); }
+.map-hero {
+  width: 100%; max-width: 600px;
+  padding: 48px 24px 32px;
+  text-align: center;
+  position: relative; z-index: 5;
+}
+.map-greeting { font-size: .88rem; color: var(--gold); letter-spacing: 1px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; }
+.map-title { font-family: var(--font-display); font-size: clamp(1.8rem,5vw,2.8rem); font-weight: 900; color: #fff; line-height: 1.1; margin-bottom: 8px; }
+.map-subtitle { font-size: .92rem; color: rgba(255,255,255,.5); line-height: 1.6; max-width: 360px; margin: 0 auto; }
+.progress-ring-wrap { margin: 24px auto 0; width: 96px; height: 96px; position: relative; }
+.progress-ring-svg { transform: rotate(-90deg); }
+.progress-ring-bg { fill: none; stroke: rgba(255,255,255,.08); stroke-width: 6; }
+.progress-ring-fill { fill: none; stroke: url(#ring-grad); stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset .8s var(--ease-bloom); }
+.progress-ring-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.progress-ring-pct { font-family: var(--font-display); font-size: 1.6rem; font-weight: 900; color: var(--gold); line-height: 1; }
+.progress-ring-lbl { font-size: .58rem; color: rgba(255,255,255,.4); letter-spacing: .5px; text-transform: uppercase; }
+.map-stats { display: flex; gap: 16px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+.stat-pill { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 30px; padding: 6px 16px; font-size: .78rem; font-weight: 700; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 6px; }
+.chapters-list {
+  width: 100%; max-width: 600px;
+  padding: 0 20px 40px;
+  display: flex; flex-direction: column; gap: 16px;
+  position: relative; z-index: 5;
+}
+.chapter-card {
+  background: rgba(255,255,255,.04);
+  border: 1.5px solid rgba(255,255,255,.08);
+  border-radius: var(--r-lg);
+  padding: 22px 20px;
+  opacity: 1; /* always visible even without GSAP */
+  display: flex; align-items: center; gap: 18px;
+  cursor: pointer;
+  transition: all .25s var(--ease-bloom);
+  position: relative; overflow: hidden;
+}
+.chapter-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  opacity: 0;
+  transition: opacity .25s;
+}
+.chapter-card.c0::before { background: linear-gradient(135deg, rgba(245,158,11,.15), transparent); }
+.chapter-card.c1::before { background: linear-gradient(135deg, rgba(15,118,110,.2), transparent); }
+.chapter-card.c2::before { background: linear-gradient(135deg, rgba(107,33,168,.2), transparent); }
+.chapter-card.c3::before { background: linear-gradient(135deg, rgba(225,29,72,.15), transparent); }
+.chapter-card.c4::before { background: linear-gradient(135deg, rgba(253,164,175,.15), transparent); }
+.chapter-card:hover:not(.locked) { transform: translateX(6px) scale(1.01); border-color: rgba(255,255,255,.2); }
+.chapter-card:hover:not(.locked)::before { opacity: 1; }
+.chapter-card.locked { opacity: .4; cursor: not-allowed; }
+.chapter-card.done { border-color: rgba(245,158,11,.3); }
+.chapter-icon {
+  width: 58px; height: 58px;
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.9rem; flex-shrink: 0;
+  position: relative; z-index: 1;
+}
+.chapter-info { flex: 1; position: relative; z-index: 1; }
+.chapter-num { font-size: .68rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; opacity: .5; margin-bottom: 3px; }
+.chapter-name { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 4px; line-height: 1.2; }
+.chapter-desc { font-size: .78rem; color: rgba(255,255,255,.45); line-height: 1.4; }
+.chapter-status { position: relative; z-index: 1; flex-shrink: 0; }
+.chapter-done-ring { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--rose)); display: flex; align-items: center; justify-content: center; font-size: 1rem; box-shadow: var(--glow-gold); }
+.chapter-lock { font-size: 1.2rem; opacity: .4; }
+.chapter-arrow { font-size: 1.1rem; color: rgba(255,255,255,.3); }
+
+/* ── LESSON / CHAPTER SCREEN ── */
+#s-lesson { background: var(--g-night); }
+.lesson-topbar {
+  width: 100%; max-width: 600px;
+  padding: 16px 20px 0;
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0;
+  position: relative; z-index: 5;
+}
+.back-btn {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px;
+  width: 40px; height: 40px;
+  color: rgba(255,255,255,.7);
+  font-size: 1.1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s; flex-shrink: 0;
+}
+.back-btn:hover { background: rgba(255,255,255,.15); color: #fff; }
+.lesson-chapter-badge {
+  font-size: .72rem; font-weight: 700; letter-spacing: .8px;
+  text-transform: uppercase;
+  background: rgba(245,158,11,.15);
+  border: 1px solid rgba(245,158,11,.3);
+  color: var(--gold);
+  border-radius: 20px; padding: 5px 14px;
+}
+.lesson-prog-wrap { width: 100%; max-width: 600px; padding: 12px 20px 0; flex-shrink: 0; position: relative; z-index: 5; }
+.lesson-prog-track { height: 4px; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; }
+.lesson-prog-fill { height: 100%; background: var(--g-dawn); border-radius: 4px; transition: width .6s var(--ease-bloom); }
+.lesson-body {
+  width: 100%; max-width: 600px;
+  padding: 20px 20px 0;
+  display: flex; flex-direction: column; gap: 16px;
+  flex: 1;
+  position: relative; z-index: 5;
+}
+.lesson-card {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--r-lg);
+  padding: 28px 24px;
+  position: relative; overflow: hidden;
+}
+.lesson-card-accent {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  border-radius: 3px 3px 0 0;
+}
+.lesson-illus { font-size: 4rem; text-align: center; display: block; margin-bottom: 12px; animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.lesson-heading { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--gold-light); text-align: center; margin-bottom: 12px; }
+.lesson-text { font-size: .96rem; color: rgba(255,255,255,.75); line-height: 1.72; text-align: center; }
+.fact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.fact-item { background: rgba(255,255,255,.05); border-radius: 14px; padding: 14px 10px; text-align: center; border: 1px solid rgba(255,255,255,.07); }
+.fi-em { font-size: 1.8rem; margin-bottom: 6px; display: block; }
+.fi-text { font-size: .8rem; font-weight: 600; color: rgba(255,255,255,.7); line-height: 1.3; }
+.do-dont-list { display: flex; flex-direction: column; gap: 10px; }
+.do-row { display: flex; align-items: flex-start; gap: 12px; background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.2); border-radius: 14px; padding: 12px 14px; }
+.dont-row { display: flex; align-items: flex-start; gap: 12px; background: rgba(225,29,72,.08); border: 1px solid rgba(225,29,72,.2); border-radius: 14px; padding: 12px 14px; }
+.dd-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+.dd-text { font-size: .86rem; font-weight: 600; color: rgba(255,255,255,.8); line-height: 1.45; }
+.myth-block { display: flex; flex-direction: column; gap: 8px; }
+.myth-false { background: rgba(225,29,72,.08); border: 1px solid rgba(225,29,72,.2); border-radius: 12px; padding: 12px 14px; display: flex; gap: 10px; }
+.myth-true { background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.2); border-radius: 12px; padding: 12px 14px; display: flex; gap: 10px; }
+.myth-tag { font-size: .64rem; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; margin-bottom: 3px; }
+.myth-false .myth-tag { color: var(--rose-soft); }
+.myth-true .myth-tag { color: var(--teal-light); }
+.myth-body { font-size: .84rem; font-weight: 600; color: rgba(255,255,255,.78); line-height: 1.45; }
+.lesson-next-wrap { width: 100%; max-width: 600px; padding: 16px 20px 0; flex-shrink: 0; position: relative; z-index: 5; }
+.lesson-next-btn {
+  width: 100%; background: var(--g-dawn);
+  color: #fff; border: none;
+  border-radius: 100px; padding: 17px;
+  font-family: var(--font-display);
+  font-size: 1.05rem; font-weight: 700;
+  cursor: pointer; letter-spacing: .5px;
+  box-shadow: var(--glow-rose);
+  transition: transform .18s var(--ease-petals);
+}
+.lesson-next-btn:active { transform: scale(.97); }
+
+/* ── QUIZ / SCENARIO SCREEN ── */
+#s-quiz { background: var(--g-night); }
+.quiz-body { width: 100%; max-width: 600px; padding: 16px 20px 0; position: relative; z-index: 5; flex: 1; }
+.scene-card {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--r-lg);
+  padding: 24px 20px;
+  margin-bottom: 16px;
+  display: flex; gap: 16px; align-items: flex-end;
+}
+.scene-avatar { font-size: 3.8rem; flex-shrink: 0; animation: float 3s ease-in-out infinite; }
+.scene-bubble {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 20px 20px 20px 4px;
+  padding: 14px 16px; flex: 1;
+}
+.scene-name { font-size: .68rem; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
+.scene-text { font-size: .94rem; font-weight: 500; color: rgba(255,255,255,.85); line-height: 1.55; }
+.quiz-q-card {
+  background: rgba(107,33,168,.15);
+  border: 1px solid rgba(107,33,168,.3);
+  border-radius: var(--r-md);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.quiz-q-label { font-size: .68rem; font-weight: 800; color: rgba(253,164,175,.8); letter-spacing: .8px; text-transform: uppercase; margin-bottom: 6px; }
+.quiz-q-text { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: #fff; line-height: 1.45; }
+.choices-list { display: flex; flex-direction: column; gap: 10px; }
+.choice-btn {
+  width: 100%;
+  background: rgba(255,255,255,.05);
+  border: 1.5px solid rgba(255,255,255,.1);
+  border-radius: var(--r-md);
+  padding: 15px 18px;
+  display: flex; align-items: center; gap: 14px;
+  cursor: pointer; text-align: left;
+  transition: all .22s var(--ease-bloom);
+  color: #fff; font-family: var(--font-body);
+}
+.choice-btn:hover:not(:disabled) { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.09); transform: translateX(4px); }
+.choice-btn:active:not(:disabled) { transform: scale(.98) translateX(4px); }
+.choice-btn:disabled { cursor: default; }
+.choice-em { font-size: 1.6rem; flex-shrink: 0; }
+.choice-text { font-size: .92rem; font-weight: 600; line-height: 1.4; }
+.choice-btn.ans-good { border-color: rgba(16,185,129,.5); background: rgba(16,185,129,.1); }
+.choice-btn.ans-ok   { border-color: rgba(245,158,11,.5); background: rgba(245,158,11,.08); }
+.choice-btn.ans-bad  { border-color: rgba(225,29,72,.4);  background: rgba(225,29,72,.07); }
+.feedback-card {
+  border-radius: var(--r-lg);
+  padding: 22px 20px;
+  margin-top: 4px;
+  display: none;
+  animation: slide-up .4s var(--ease-bloom) both;
+}
+.feedback-card.show { display: block; }
+.feedback-card.good { background: rgba(16,185,129,.1); border: 1.5px solid rgba(16,185,129,.3); }
+.feedback-card.ok   { background: rgba(245,158,11,.08); border: 1.5px solid rgba(245,158,11,.3); }
+.feedback-card.bad  { background: rgba(225,29,72,.08);  border: 1.5px solid rgba(225,29,72,.3); }
+.fb-em { font-size: 2.4rem; margin-bottom: 8px; display: block; }
+.fb-title { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.fb-fact { font-size: .86rem; color: rgba(255,255,255,.7); line-height: 1.55; }
+.quiz-next-wrap { width: 100%; max-width: 600px; padding: 16px 20px 4px; flex-shrink: 0; position: relative; z-index: 5; }
+
+/* ── RATING ── */
+#s-rating {
+  background: var(--g-night);
+}
+.rating-wrap {
+  position: relative; z-index: 5;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 24px;
+  padding: 48px 24px; max-width: 480px; width: 100%;
+  text-align: center;
+}
+.rating-bloom { font-size: 4.5rem; animation: bloom-in .6s var(--ease-bloom) both; }
+.rating-title { font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; color: var(--gold-light); }
+.rating-sub { font-size: .92rem; color: rgba(255,255,255,.5); }
+.emoji-row { display: flex; gap: 20px; }
+.r-btn {
+  font-size: 2.8rem; cursor: pointer;
+  background: rgba(255,255,255,.06);
+  border: 1.5px solid rgba(255,255,255,.1);
+  width: 70px; height: 70px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s var(--ease-petals);
+}
+.r-btn:hover { transform: scale(1.15); background: rgba(255,255,255,.12); }
+.r-btn:active { transform: scale(1.3); }
+.r-btn.sel { background: rgba(245,158,11,.2); border-color: var(--gold); box-shadow: var(--glow-gold); transform: scale(1.15); }
+
+/* ── COMPLETION ── */
+#s-complete { background: var(--g-night); }
+.complete-wrap {
+  position: relative; z-index: 5;
+  display: flex; flex-direction: column;
+  align-items: center;
+  padding: 48px 24px 40px;
+  max-width: 520px; width: 100%;
+  text-align: center; gap: 20px;
+}
+.complete-trophy { font-size: 5.5rem; animation: bloom-in .7s var(--ease-bloom) both, float 3s ease-in-out 1s infinite; }
+.complete-title { font-family: var(--font-display); font-size: clamp(2rem,6vw,3rem); font-weight: 900; background: var(--g-dawn); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.complete-sub { font-size: 1rem; color: rgba(255,255,255,.55); line-height: 1.6; max-width: 360px; }
+.stats-glass {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--r-lg);
+  padding: 20px 24px;
+  width: 100%; text-align: left;
+}
+.stats-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+.stats-row:last-child { border-bottom: none; }
+.sr-label { font-size: .8rem; font-weight: 600; color: rgba(255,255,255,.4); }
+.sr-val { font-size: .92rem; font-weight: 800; color: rgba(255,255,255,.9); }
+.complete-btns { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.btn-primary {
+  background: var(--g-dawn); color: #fff; border: none;
+  border-radius: 100px; padding: 17px;
+  font-family: var(--font-display); font-size: 1.05rem; font-weight: 700;
+  cursor: pointer; box-shadow: var(--glow-rose); letter-spacing: .5px;
+  transition: transform .18s var(--ease-petals);
+}
+.btn-secondary {
+  background: rgba(255,255,255,.07);
+  border: 1.5px solid rgba(255,255,255,.15);
+  color: rgba(255,255,255,.8); border-radius: 100px; padding: 15px;
+  font-family: var(--font-display); font-size: 1rem; font-weight: 700;
+  cursor: pointer; letter-spacing: .5px;
+  transition: all .18s;
+}
+.btn-dark {
+  background: rgba(0,0,0,.4);
+  border: 1.5px solid rgba(255,255,255,.1);
+  color: rgba(255,255,255,.6); border-radius: 100px; padding: 14px;
+  font-family: var(--font-body); font-size: .92rem; font-weight: 600;
+  cursor: pointer; transition: all .18s;
+}
+.btn-primary:active, .btn-secondary:active, .btn-dark:active { transform: scale(.97); }
+.btn-secondary:hover { background: rgba(255,255,255,.12); }
+.btn-dark:hover { color: rgba(255,255,255,.9); }
+
+/* ── TEACHER BANNER ── */
+.teacher-banner {
+  display: none; width: 100%;
+  background: linear-gradient(90deg,#1e1b4b,#312e81);
+  border-bottom: 1px solid rgba(99,102,241,.3);
+  padding: 8px 20px;
+  font-size: .75rem; font-weight: 700;
+  color: rgba(199,210,254,.9);
+  letter-spacing: .4px;
+  flex-shrink: 0;
+  text-align: center;
+  position: relative; z-index: 5;
+}
+.teacher-banner.show { display: block; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: rgba(255,255,255,.1);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,.15);
+  color: #fff;
+  border-radius: 100px;
+  padding: 12px 24px;
+  font-size: .85rem; font-weight: 700;
+  opacity: 0;
+  transition: all .35s var(--ease-bloom);
+  z-index: 9998;
+  white-space: nowrap;
+  max-width: 90vw;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── DECORATIVE SVG MANDALA ── */
+.mandala-bg {
+  position: absolute;
+  pointer-events: none;
+  opacity: .06;
+  animation: spin 80s linear infinite;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 380px) {
+  .lang-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .lang-card { padding: 16px 10px; }
+  .fact-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 768px) {
+  .lang-grid { grid-template-columns: repeat(4, 1fr); max-width: 680px; }
+  .chapters-list { max-width: 680px; }
+  .lesson-body, .lesson-topbar, .lesson-prog-wrap, .lesson-next-wrap { max-width: 680px; }
+  .quiz-body, .quiz-next-wrap { max-width: 680px; }
+}
+
+/* ── PERFORMANCE: reduce motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+/* Low-end device class added via JS */
+.perf-low .petal { display: none !important; }
+.perf-low .mandala-bg { display: none !important; }
+.perf-low .hero-mandala { display: none !important; }
+.perf-low #bg-canvas { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ══ OFFLINE BAR ══ -->
+<div id="offline-bar">📵 No internet — your progress is saved and will sync when you reconnect</div>
+
+<!-- ══ LOADING ══ -->
+<div class="screen active" id="s-loading">
+  <div class="loader-mandala">
+    <div class="loader-ring"></div>
+    <div class="loader-ring"></div>
+    <div class="loader-ring"></div>
+    <div class="loader-bloom">🌸</div>
+  </div>
+  <div class="loader-text">Sakhi</div>
+  <div class="loader-sub">Loading your sacred journey…</div>
+</div>
+
+<!-- ══ ANIMATED BG CANVAS ══ -->
+<canvas id="bg-canvas"></canvas>
+<div class="particle-field" id="particle-field"></div>
+
+<!-- ══ HERO / SPLASH ══ -->
+<div class="screen" id="s-hero">
+  <svg class="hero-mandala" viewBox="0 0 800 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="400" cy="400" r="380" stroke="#f59e0b" stroke-width=".5"/>
+    <circle cx="400" cy="400" r="320" stroke="#e11d48" stroke-width=".5"/>
+    <circle cx="400" cy="400" r="260" stroke="#6b21a8" stroke-width=".5"/>
+    <circle cx="400" cy="400" r="200" stroke="#f59e0b" stroke-width=".5"/>
+    <g stroke="#f59e0b" stroke-width=".4" opacity=".6">
+      <line x1="400" y1="20" x2="400" y2="780"/>
+      <line x1="20" y1="400" x2="780" y2="400"/>
+      <line x1="131" y1="131" x2="669" y2="669"/>
+      <line x1="669" y1="131" x2="131" y2="669"/>
+      <line x1="82" y1="269" x2="718" y2="531"/>
+      <line x1="269" y1="82" x2="531" y2="718"/>
+      <line x1="718" y1="269" x2="82" y2="531"/>
+      <line x1="531" y1="82" x2="269" y2="718"/>
+    </g>
+    <g fill="#e11d48" opacity=".4">
+      <circle cx="400" cy="20" r="4"/><circle cx="400" cy="780" r="4"/>
+      <circle cx="20" cy="400" r="4"/><circle cx="780" cy="400" r="4"/>
+    </g>
+  </svg>
+
+  <div class="hero-content">
+    <span class="hero-flower">🌸</span>
+    <h1 class="hero-title">Sakhi</h1>
+    <div class="hero-sanskrit">सखी · Sacred Friend</div>
+    <p class="hero-tagline">A journey of knowledge, courage, and self-care.<br/>For every girl, everywhere.</p>
+    <button class="hero-btn" onclick="goToLang()">
+      <div class="hero-btn-inner">Begin Your Journey ✨</div>
+    </button>
+    <div class="hero-langs">
+      <span class="hero-lang-pip">English</span>
+      <span class="hero-lang-pip">हिंदी</span>
+      <span class="hero-lang-pip">বাংলা</span>
+      <span class="hero-lang-pip">தமிழ்</span>
+      <span class="hero-lang-pip">తెలుగు</span>
+      <span class="hero-lang-pip">मराठी</span>
+      <span class="hero-lang-pip">ਪੰਜਾਬੀ</span>
+      <span class="hero-lang-pip">ગુજરાતી</span>
+      <span class="hero-lang-pip">+ More</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LANGUAGE SELECT ══ -->
+<div class="screen-scroll" id="s-lang">
+  <div class="lang-header">
+    <h2 class="lang-header-title">Choose Your Language</h2>
+    <p class="lang-header-sub">Tap a card — hear it speak, then choose</p>
+  </div>
+  <div class="lang-grid" id="lang-grid"></div>
+  <div class="lang-cta">
+    <button class="lang-cta-btn" id="lang-go-btn" onclick="afterLang()">Continue →</button>
+  </div>
+</div>
+
+<!-- ══ SETUP (School / Class) ══ -->
+<div class="screen-scroll" id="s-setup">
+  <div class="setup-wrap">
+    <div style="text-align:center;font-size:2.8rem;margin-bottom:16px">🏫</div>
+    <h2 class="setup-title" id="setup-title">School Setup</h2>
+    <p class="setup-sub" id="setup-sub">Help us track your learning journey</p>
+
+    <div class="field-group">
+      <label class="field-label" id="lbl-school">🏫 School Name</label>
+      <input class="field-input" id="inp-school" type="text" placeholder="e.g. Government Girls School" maxlength="80"/>
+    </div>
+    <div class="field-group">
+      <label class="field-label" id="lbl-class">📚 Class / Grade</label>
+      <select class="field-select" id="inp-class">
+        <option value="">Select Class</option>
+        <option>Class 6</option><option>Class 7</option><option>Class 8</option>
+        <option>Class 9</option><option>Class 10</option>
+        <option>College</option><option>Adult / Other</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label class="field-label" id="lbl-name">👤 Your Name <span style="text-transform:none;font-weight:400;opacity:.6">(optional)</span></label>
+      <input class="field-input" id="inp-name" type="text" placeholder="Nickname or leave blank" maxlength="50"/>
+    </div>
+    <div class="teacher-row">
+      <div>
+        <div class="teacher-label">👩‍🏫 Teacher Mode</div>
+        <div class="teacher-sub">Faster flow · No auto-audio</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="toggle-teacher"/>
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+    <button class="setup-btn" onclick="submitSetup()">Start Learning 🚀</button>
+    <span class="skip-link" onclick="skipSetup()">Skip for now</span>
+  </div>
+</div>
+
+<!-- ══ MODULE MAP ══ -->
+<div class="screen-scroll" id="s-map">
+  <div class="teacher-banner" id="teacher-banner">
+    👩‍🏫 TEACHER MODE · <span id="teacher-info"></span>
+  </div>
+  <div class="map-hero">
+    <p class="map-greeting" id="map-greeting">Welcome back</p>
+    <h2 class="map-title" id="map-title">Your Learning Journey</h2>
+    <p class="map-subtitle" id="map-subtitle">Complete all chapters to earn your Sakhi badge</p>
+    <div class="progress-ring-wrap">
+      <svg class="progress-ring-svg" width="96" height="96" viewBox="0 0 96 96">
+        <defs>
+          <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#e11d48"/>
+            <stop offset="100%" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+        <circle class="progress-ring-bg" cx="48" cy="48" r="42"/>
+        <circle class="progress-ring-fill" id="ring-fill" cx="48" cy="48" r="42"
+          stroke-dasharray="264" stroke-dashoffset="264"/>
+      </svg>
+      <div class="progress-ring-label">
+        <div class="progress-ring-pct" id="ring-pct">0%</div>
+        <div class="progress-ring-lbl">Done</div>
+      </div>
+    </div>
+    <div class="map-stats">
+      <div class="stat-pill">⭐ <span id="stat-pts">0</span> pts</div>
+      <div class="stat-pill">📚 <span id="stat-done">0</span>/5 chapters</div>
+      <div class="stat-pill" id="stat-school-pill" style="display:none">🏫 <span id="stat-school-name"></span></div>
+    </div>
+  </div>
+  <div class="chapters-list" id="chapters-list"></div>
+</div>
+
+<!-- ══ LESSON SCREEN ══ -->
+<div class="screen-scroll" id="s-lesson">
+  <div class="lesson-topbar">
+    <button class="back-btn" onclick="showScreen('s-map')">←</button>
+    <div class="lesson-chapter-badge" id="lesson-badge">Chapter 1</div>
+  </div>
+  <div class="lesson-prog-wrap">
+    <div class="lesson-prog-track">
+      <div class="lesson-prog-fill" id="lesson-prog" style="width:0%"></div>
+    </div>
+  </div>
+  <div class="lesson-body" id="lesson-body"></div>
+  <div class="lesson-next-wrap">
+    <button class="lesson-next-btn" id="lesson-next-btn" onclick="nextLessonStep()">Continue →</button>
+  </div>
+</div>
+
+<!-- ══ QUIZ SCREEN ══ -->
+<div class="screen-scroll" id="s-quiz">
+  <div class="lesson-topbar">
+    <button class="back-btn" onclick="showScreen('s-map')">←</button>
+    <div class="lesson-chapter-badge" id="quiz-badge">Scenario</div>
+  </div>
+  <div class="lesson-prog-wrap">
+    <div class="lesson-prog-track">
+      <div class="lesson-prog-fill" id="quiz-prog" style="width:0%"></div>
+    </div>
+  </div>
+  <div class="quiz-body" id="quiz-body"></div>
+  <div class="quiz-next-wrap" id="quiz-next-wrap" style="display:none">
+    <button class="lesson-next-btn" onclick="nextQuizQ()">Next →</button>
+  </div>
+</div>
+
+<!-- ══ RATING ══ -->
+<div class="screen" id="s-rating">
+  <div class="rating-wrap">
+    <div class="rating-bloom">💬</div>
+    <h3 class="rating-title" id="rating-title">How was this chapter?</h3>
+    <p class="rating-sub" id="rating-sub">Your feedback shapes the next journey</p>
+    <div class="emoji-row">
+      <button class="r-btn" onclick="rate(1,this)" title="Didn't help">😕</button>
+      <button class="r-btn" onclick="rate(3,this)" title="It was okay">😊</button>
+      <button class="r-btn" onclick="rate(5,this)" title="Loved it!">🤩</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COMPLETION ══ -->
+<div class="screen-scroll" id="s-complete">
+  <div class="complete-wrap">
+    <div class="complete-trophy">🏆</div>
+    <h2 class="complete-title" id="comp-title">You Did It!</h2>
+    <p class="complete-sub" id="comp-sub">You have completed your Sakhi journey. You are now an ambassador of health!</p>
+    <div class="stats-glass" id="comp-stats"></div>
+    <div class="complete-btns">
+      <button class="btn-primary" onclick="nextStudent()">Next Student 👤</button>
+      <button class="btn-secondary" onclick="restartJourney()">Start Over 🔄</button>
+      <button class="btn-dark" onclick="shareApp()">Share with Friends 💌</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════
+     JAVASCRIPT ENGINE
+══════════════════════════════════════ -->
+<script>
+// ═══════════════════════════════════════════
+//  0. SAFE STORAGE (Edge/Firefox tracking prevention fallback)
+// ═══════════════════════════════════════════
+const _mem = {};
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return _mem[k]||null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){ _mem[k]=v; } },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){ delete _mem[k]; } },
+};
+
+// ═══════════════════════════════════════════
+//  1. CONFIG
+// ═══════════════════════════════════════════
+const API_URL = 'YOUR_APPS_SCRIPT_URL_HERE'; // Replace after deploying Apps Script
+
+// ═══════════════════════════════════════════
+//  2. PERFORMANCE DETECTION
+// ═══════════════════════════════════════════
+(function detectPerf() {
+  const nav = navigator;
+  const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+  const slowConn = conn && (conn.saveData || ['slow-2g','2g'].includes(conn.effectiveType));
+  const lowMem = nav.deviceMemory && nav.deviceMemory < 2;
+  if (slowConn || lowMem) document.body.classList.add('perf-low');
+})();
+
+// ═══════════════════════════════════════════
+//  3. CANVAS AMBIENT BG
+// ═══════════════════════════════════════════
+(function initCanvas() {
+  if (document.body.classList.contains('perf-low')) return;
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, orbs = [];
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  const colors = ['rgba(107,33,168,.35)','rgba(225,29,72,.25)','rgba(245,158,11,.2)','rgba(15,118,110,.2)'];
+  for (let i = 0; i < 5; i++) {
+    orbs.push({ x: Math.random()*W, y: Math.random()*H, r: 150+Math.random()*250, c: colors[i%4], vx: (Math.random()-.5)*.3, vy: (Math.random()-.5)*.3 });
+  }
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    orbs.forEach(o => {
+      const g = ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+      g.addColorStop(0, o.c); g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fill();
+      o.x += o.vx; o.y += o.vy;
+      if (o.x < -o.r) o.x = W+o.r; if (o.x > W+o.r) o.x = -o.r;
+      if (o.y < -o.r) o.y = H+o.r; if (o.y > H+o.r) o.y = -o.r;
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ═══════════════════════════════════════════
+//  4. PETAL PARTICLES
+// ═══════════════════════════════════════════
+(function initPetals() {
+  if (document.body.classList.contains('perf-low')) return;
+  const field = document.getElementById('particle-field');
+  const count = window.innerWidth < 480 ? 8 : 14;
+  const colors = ['#fda4af','#fde68a','#c4b5fd','#6ee7b7','#fb7185'];
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    const size = 3 + Math.random() * 6;
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      width:${size}px; height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${8+Math.random()*16}s;
+      animation-delay:${Math.random()*12}s;
+    `;
+    field.appendChild(p);
+  }
+})();
+
+// ═══════════════════════════════════════════
+//  5. LANGUAGE DATA
+// ═══════════════════════════════════════════
+const LANGS = [
+  { code:'en', sc:'en-US',  em:'👋', native:'Hello',     roman:'English',  greet:'Hello! I am Sakhi, your health friend. Tap to choose me!' },
+  { code:'hi', sc:'hi-IN',  em:'🙏', native:'नमस्ते',   roman:'Hindi',    greet:'नमस्ते! मैं सखी हूँ, आपकी सहेली। मुझे चुनें!' },
+  { code:'bn', sc:'bn-IN',  em:'🌼', native:'নমস্কার',  roman:'Bengali',  greet:'নমস্কার! আমি সখি। আমাকে বেছে নিন!' },
+  { code:'ta', sc:'ta-IN',  em:'🌸', native:'வணக்கம்', roman:'Tamil',    greet:'வணக்கம்! நான் சகி. என்னை தேர்வு செய்யுங்கள்!' },
+  { code:'te', sc:'te-IN',  em:'🌻', native:'నమస్కారం',roman:'Telugu',   greet:'నమస్కారం! నేను సఖి. నన్ను ఎంచుకోండి!' },
+  { code:'mr', sc:'mr-IN',  em:'🎊', native:'नमस्कार', roman:'Marathi',  greet:'नमस्कार! मी सखी आहे. मला निवडा!' },
+  { code:'pa', sc:'pa-IN',  em:'🌾', native:'ਸਤਿ ਸ੍ਰੀ', roman:'Punjabi', greet:'ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ ਸਖੀ ਹਾਂ। ਮੈਨੂੰ ਚੁਣੋ!' },
+  { code:'gu', sc:'gu-IN',  em:'🪔', native:'નમસ્તે',  roman:'Gujarati', greet:'નમસ્તે! હું સખી છું. મને પસંદ કરો!' },
+  { code:'kn', sc:'kn-IN',  em:'🌺', native:'ನಮಸ್ಕಾರ',roman:'Kannada',  greet:'ನಮಸ್ಕಾರ! ನಾನು ಸಖಿ. ನನ್ನನ್ನು ಆಯ್ಕೆ ಮಾಡಿ!' },
+  { code:'ml', sc:'ml-IN',  em:'🌴', native:'നമസ്കാരം',roman:'Malayalam',greet:'നമസ്കാരം! ഞാൻ സഖി. എന്നെ തിരഞ്ഞെടുക്കൂ!' },
+];
+
+// ═══════════════════════════════════════════
+//  6. TRANSLATIONS
+// ═══════════════════════════════════════════
+const T = {
+  en: {
+    setupTitle:'School Setup', setupSub:'Help us personalize your journey',
+    lblSchool:'🏫 School Name', lblClass:'📚 Class / Grade', lblName:'👤 Your Name',
+    mapGreet:'Welcome', mapTitle:'Your Sacred Journey', mapSub:'Complete all chapters to earn your Sakhi badge',
+    lessonLabels:['CHAPTER 1','CHAPTER 2','CHAPTER 3','CHAPTER 4','CHAPTER 5'],
+    chapterNames:['Understanding Periods','Hygiene & Care','Emotions & Myths','Scenario: Make Choices','Your Health Rights'],
+    chapterDescs:['What is menstruation?','Stay clean, stay safe','Your feelings matter','Help Priya make the right call','Know your rights'],
+    continue:'Continue', finish:'Complete Chapter', ratingQ:'How was this chapter?', ratingSub:'Your voice shapes the next journey',
+    compTitle:'You Did It!', compSub:'You are now a Sakhi — a true health friend!',
+    nextStudent:'Next Student 👤', restart:'Start Over 🔄', share:'Share with Friends 💌',
+  },
+  hi: {
+    setupTitle:'स्कूल सेटअप', setupSub:'हम आपकी यात्रा को बेहतर बनाएंगे',
+    lblSchool:'🏫 स्कूल का नाम', lblClass:'📚 कक्षा', lblName:'👤 आपका नाम',
+    mapGreet:'स्वागत है', mapTitle:'आपकी पवित्र यात्रा', mapSub:'सभी अध्याय पूरे करें और सखी बैज पाएं',
+    lessonLabels:['अध्याय 1','अध्याय 2','अध्याय 3','अध्याय 4','अध्याय 5'],
+    chapterNames:['माहवारी को समझें','स्वच्छता और देखभाल','भावनाएं और मिथक','परिदृश्य: सही चुनाव','आपके स्वास्थ्य अधिकार'],
+    chapterDescs:['माहवारी क्या है?','साफ रहें, सुरक्षित रहें','आपकी भावनाएं मायने रखती हैं','प्रिया की मदद करें','अपने अधिकार जानें'],
+    continue:'आगे', finish:'अध्याय पूरा करें', ratingQ:'यह अध्याय कैसा था?', ratingSub:'आपकी राय अगली यात्रा को बेहतर बनाती है',
+    compTitle:'शाबाश!', compSub:'आप अब एक सखी हैं — एक सच्ची स्वास्थ्य मित्र!',
+    nextStudent:'अगला छात्र 👤', restart:'फिर शुरू करें 🔄', share:'दोस्तों को बताएं 💌',
+  },
+  bn: {
+    setupTitle:'স্কুল সেটআপ', setupSub:'আমরা আপনার যাত্রা ব্যক্তিগত করব',
+    lblSchool:'🏫 স্কুলের নাম', lblClass:'📚 শ্রেণী', lblName:'👤 আপনার নাম',
+    mapGreet:'স্বাগতম', mapTitle:'আপনার পবিত্র যাত্রা', mapSub:'সব অধ্যায় সম্পন্ন করুন এবং সখি ব্যাজ পান',
+    lessonLabels:['অধ্যায় ১','অধ্যায় ২','অধ্যায় ৩','অধ্যায় ৪','অধ্যায় ৫'],
+    chapterNames:['মাসিক বোঝা','স্বাস্থ্যবিধি ও যত্ন','আবেগ ও মিথ','পরিস্থিতি: সঠিক পছন্দ','আপনার স্বাস্থ্য অধিকার'],
+    chapterDescs:['মাসিক কী?','পরিষ্কার থাকুন, নিরাপদ থাকুন','আপনার অনুভূতি গুরুত্বপূর্ণ','প্রিয়াকে সাহায্য করুন','আপনার অধিকার জানুন'],
+    continue:'এগিয়ে যান', finish:'অধ্যায় শেষ করুন', ratingQ:'এই অধ্যায় কেমন ছিল?', ratingSub:'আপনার মতামত পরবর্তী যাত্রাকে উন্নত করে',
+    compTitle:'দারুণ!', compSub:'আপনি এখন একজন সখি — একজন সত্যিকারের স্বাস্থ্য বন্ধু!',
+    nextStudent:'পরবর্তী শিক্ষার্থী 👤', restart:'আবার শুরু 🔄', share:'বন্ধুদের জানান 💌',
+  },
+  ta: {
+    setupTitle:'பள்ளி அமைவு', setupSub:'உங்கள் பயணத்தை தனிப்பயனாக்குவோம்',
+    lblSchool:'🏫 பள்ளியின் பெயர்', lblClass:'📚 வகுப்பு', lblName:'👤 உங்கள் பெயர்',
+    mapGreet:'வரவேற்கிறோம்', mapTitle:'உங்கள் புனித பயணம்', mapSub:'அனைத்து அத்தியாயங்களையும் முடித்து சகி பேட்ஜ் பெறுங்கள்',
+    lessonLabels:['அத்தியாயம் 1','அத்தியாயம் 2','அத்தியாயம் 3','அத்தியாயம் 4','அத்தியாயம் 5'],
+    chapterNames:['மாதவிடாய் புரிதல்','சுகாதாரம் & பராமரிப்பு','உணர்வுகள் & மூடநம்பிக்கை','சூழல்: சரியான தேர்வு','உங்கள் உரிமைகள்'],
+    chapterDescs:['மாதவிடாய் என்ன?','சுத்தமாக இருங்கள்','உணர்வுகள் முக்கியம்','பிரியாவுக்கு உதவுங்கள்','உரிமைகள் அறிந்திடுங்கள்'],
+    continue:'தொடர்க', finish:'அத்தியாயம் முடிக்கவும்', ratingQ:'இந்த அத்தியாயம் எப்படி இருந்தது?', ratingSub:'உங்கள் கருத்து உதவுகிறது',
+    compTitle:'சாதித்தீர்கள்!', compSub:'நீங்கள் இப்போது சகி — ஒரு உண்மையான ஆரோக்கிய நண்பர்!',
+    nextStudent:'அடுத்த மாணவர் 👤', restart:'மீண்டும் தொடங்கு 🔄', share:'நண்பர்களுக்கு சொல் 💌',
+  },
+  te: { setupTitle:'పాఠశాల సెటప్', setupSub:'మీ ప్రయాణాన్ని వ్యక్తిగతీకరిద్దాం', lblSchool:'🏫 పాఠశాల పేరు', lblClass:'📚 తరగతి', lblName:'👤 మీ పేరు', mapGreet:'స్వాగతం', mapTitle:'మీ పవిత్ర ప్రయాణం', mapSub:'అన్ని అధ్యాయాలు పూర్తి చేయండి', lessonLabels:['అధ్యాయం 1','అధ్యాయం 2','అధ్యాయం 3','అధ్యాయం 4','అధ్యాయం 5'], chapterNames:['రుతుస్రావం అర్థం','పరిశుభ్రత & సంరక్షణ','భావాలు & మూఢ నమ్మకాలు','దృశ్యం: సరైన ఎంపిక','మీ హక్కులు'], chapterDescs:['రుతుస్రావం అంటే?','శుభ్రంగా ఉండండి','భావాలు ముఖ్యమైనవి','ప్రియకు సహాయం చేయండి','హక్కులు తెలుసుకోండి'], continue:'కొనసాగించు', finish:'అధ్యాయం పూర్తి', ratingQ:'ఈ అధ్యాయం ఎలా ఉంది?', ratingSub:'మీ అభిప్రాయం సహాయపడుతుంది', compTitle:'చాలా బాగు!', compSub:'మీరు ఇప్పుడు సఖి — ఒక నిజమైన ఆరోగ్య స్నేహితుడు!', nextStudent:'తదుపరి విద్యార్థి 👤', restart:'మళ్ళీ మొదలు 🔄', share:'స్నేహితులకు చెప్పు 💌' },
+  mr: { setupTitle:'शाळा सेटअप', setupSub:'तुमचा प्रवास वैयक्तिक करू', lblSchool:'🏫 शाळेचे नाव', lblClass:'📚 वर्ग', lblName:'👤 तुमचे नाव', mapGreet:'स्वागत', mapTitle:'तुमचा पवित्र प्रवास', mapSub:'सर्व प्रकरणे पूर्ण करा', lessonLabels:['प्रकरण 1','प्रकरण 2','प्रकरण 3','प्रकरण 4','प्रकरण 5'], chapterNames:['मासिक पाळी समजणे','स्वच्छता व काळजी','भावना व गैरसमज','परिस्थिती: योग्य निवड','तुमचे अधिकार'], chapterDescs:['मासिक पाळी म्हणजे?','स्वच्छ राहा, सुरक्षित राहा','भावना महत्त्वाच्या','प्रियाला मदत करा','अधिकार जाणून घ्या'], continue:'पुढे', finish:'प्रकरण पूर्ण करा', ratingQ:'हे प्रकरण कसे होते?', ratingSub:'तुमचा अभिप्राय महत्त्वाचा', compTitle:'शाब्बास!', compSub:'तुम्ही आता सखी आहात!', nextStudent:'पुढील विद्यार्थी 👤', restart:'पुन्हा सुरू 🔄', share:'मित्रांना सांगा 💌' },
+  pa: { setupTitle:'ਸਕੂਲ ਸੈੱਟਅੱਪ', setupSub:'ਆਪਣੀ ਯਾਤਰਾ ਨੂੰ ਨਿੱਜੀ ਬਣਾਓ', lblSchool:'🏫 ਸਕੂਲ ਦਾ ਨਾਮ', lblClass:'📚 ਜਮਾਤ', lblName:'👤 ਤੁਹਾਡਾ ਨਾਮ', mapGreet:'ਜੀ ਆਇਆਂ', mapTitle:'ਤੁਹਾਡੀ ਪਵਿੱਤਰ ਯਾਤਰਾ', mapSub:'ਸਾਰੇ ਅਧਿਆਏ ਪੂਰੇ ਕਰੋ', lessonLabels:['ਅਧਿਆਏ 1','ਅਧਿਆਏ 2','ਅਧਿਆਏ 3','ਅਧਿਆਏ 4','ਅਧਿਆਏ 5'], chapterNames:['ਮਾਹਵਾਰੀ ਸਮਝਣਾ','ਸਫਾਈ ਅਤੇ ਦੇਖਭਾਲ','ਭਾਵਨਾਵਾਂ ਅਤੇ ਭਰਮ','ਸਥਿਤੀ: ਸਹੀ ਚੋਣ','ਤੁਹਾਡੇ ਅਧਿਕਾਰ'], chapterDescs:['ਮਾਹਵਾਰੀ ਕੀ ਹੈ?','ਸਾਫ ਰਹੋ, ਸੁਰੱਖਿਅਤ ਰਹੋ','ਭਾਵਨਾਵਾਂ ਜ਼ਰੂਰੀ ਹਨ','ਪ੍ਰਿਆ ਦੀ ਮਦਦ ਕਰੋ','ਅਧਿਕਾਰ ਜਾਣੋ'], continue:'ਅੱਗੇ', finish:'ਅਧਿਆਏ ਪੂਰਾ ਕਰੋ', ratingQ:'ਇਹ ਅਧਿਆਏ ਕਿਹੋ ਜਿਹਾ ਸੀ?', ratingSub:'ਤੁਹਾਡੀ ਰਾਏ ਮਹੱਤਵਪੂਰਨ ਹੈ', compTitle:'ਸ਼ਾਬਾਸ਼!', compSub:'ਤੁਸੀਂ ਹੁਣ ਇੱਕ ਸਖੀ ਹੋ!', nextStudent:'ਅਗਲਾ ਵਿਦਿਆਰਥੀ 👤', restart:'ਦੁਬਾਰਾ ਸ਼ੁਰੂ 🔄', share:'ਦੋਸਤਾਂ ਨੂੰ ਦੱਸੋ 💌' },
+  gu: { setupTitle:'શાળા સેટઅપ', setupSub:'તમારી યાત્રાને વ્યક્તિગત બનાવીએ', lblSchool:'🏫 શાળાનું નામ', lblClass:'📚 વર્ગ', lblName:'👤 તમારું નામ', mapGreet:'સ્વાગત', mapTitle:'તમારી પવિત્ર યાત્રા', mapSub:'બધા પ્રકરણ પૂર્ણ કરો', lessonLabels:['પ્રકરણ 1','પ્રકરણ 2','પ્રકરણ 3','પ્રકરણ 4','પ્રકરણ 5'], chapterNames:['માસિક ધર્મ સમજવો','સ્વચ્છતા અને સંભાળ','લાગણી અને ભ્રમ','પ્રસંગ: સાચી પસંદ','તમારા અધિકારો'], chapterDescs:['માસિક ધર્મ શું છે?','સ્વચ્છ રહો, સુરક્ષિત રહો','લાગણી મહત્ત્વની','પ્રિયાને મદદ કરો','અધિકારો જાણો'], continue:'આગળ', finish:'પ્રકરણ પૂર્ણ', ratingQ:'આ પ્રકરણ કેવું હતું?', ratingSub:'તમારો અભિપ્રાય ઉપયોગી', compTitle:'શાબ્બાશ!', compSub:'તમે હવે સખી છો!', nextStudent:'આગળ વિદ્યાર્થી 👤', restart:'ફરી શરૂ 🔄', share:'મિત્રોને જણાવો 💌' },
+  kn: { setupTitle:'ಶಾಲೆ ಸೆಟಪ್', setupSub:'ನಿಮ್ಮ ಪ್ರಯಾಣವನ್ನು ವ್ಯಕ್ತಿಗತಗೊಳಿಸೋಣ', lblSchool:'🏫 ಶಾಲೆಯ ಹೆಸರು', lblClass:'📚 ತರಗತಿ', lblName:'👤 ನಿಮ್ಮ ಹೆಸರು', mapGreet:'ಸ್ವಾಗತ', mapTitle:'ನಿಮ್ಮ ಪವಿತ್ರ ಪ್ರಯಾಣ', mapSub:'ಎಲ್ಲಾ ಅಧ್ಯಾಯಗಳನ್ನು ಮುಗಿಸಿ', lessonLabels:['ಅಧ್ಯಾಯ 1','ಅಧ್ಯಾಯ 2','ಅಧ್ಯಾಯ 3','ಅಧ್ಯಾಯ 4','ಅಧ್ಯಾಯ 5'], chapterNames:['ಮುಟ್ಟು ಅರ್ಥ','ನೈರ್ಮಲ್ಯ & ಆರೈಕೆ','ಭಾವನೆ & ಮೂಢನಂಬಿಕೆ','ಸನ್ನಿವೇಶ: ಸರಿಯಾದ ಆಯ್ಕೆ','ನಿಮ್ಮ ಹಕ್ಕುಗಳು'], chapterDescs:['ಮುಟ್ಟು ಎಂದರೇನು?','ಸ್ವಚ್ಛವಾಗಿರಿ','ಭಾವನೆ ಮುಖ್ಯ','ಪ್ರಿಯಗೆ ಸಹಾಯ','ಹಕ್ಕುಗಳು ತಿಳಿಯಿರಿ'], continue:'ಮುಂದೆ', finish:'ಅಧ್ಯಾಯ ಮುಗಿಸಿ', ratingQ:'ಈ ಅಧ್ಯಾಯ ಹೇಗಿತ್ತು?', ratingSub:'ನಿಮ್ಮ ಅಭಿಪ್ರಾಯ ಮುಖ್ಯ', compTitle:'ಭಲೇ!', compSub:'ನೀವು ಈಗ ಸಖಿ!', nextStudent:'ಮುಂದಿನ ವಿದ್ಯಾರ್ಥಿ 👤', restart:'ಮತ್ತೆ ಶುರು 🔄', share:'ಸ್ನೇಹಿತರಿಗೆ ಹೇಳಿ 💌' },
+  ml: { setupTitle:'സ്കൂൾ സജ്ജീകരണം', setupSub:'നിങ്ങളുടെ യാത്ര വ്യക്തിഗതമാക്കാം', lblSchool:'🏫 സ്കൂളിന്റെ പേര്', lblClass:'📚 ക്ലാസ്', lblName:'👤 നിങ്ങളുടെ പേര്', mapGreet:'സ്വാഗതം', mapTitle:'നിങ്ങളുടെ പവിത്ര യാത്ര', mapSub:'എല്ലാ അദ്ധ്യായങ്ങളും പൂർത്തിയാക്കൂ', lessonLabels:['അദ്ധ്യായം 1','അദ്ധ്യായം 2','അദ്ധ്യായം 3','അദ്ധ്യായം 4','അദ്ധ്യായം 5'], chapterNames:['ആർത്തവം മനസ്സിലാക്കൽ','ശുചിത്വം & പരിചരണം','വികാരങ്ങൾ & മിഥ്യകൾ','രംഗം: ശരിയായ തിരഞ്ഞെടുപ്പ്','നിങ്ങളുടെ അവകാശങ്ങൾ'], chapterDescs:['ആർത്തവം എന്ത്?','ശുചിയായിരിക്കൂ','വികാരങ്ങൾ പ്രധാനം','പ്രിയയെ സഹായിക്കൂ','അവകാശങ്ങൾ അറിയൂ'], continue:'തുടരുക', finish:'അദ്ധ്യായം പൂർത്തിയാക്കൂ', ratingQ:'ഈ അദ്ധ്യായം എങ്ങനെ?', ratingSub:'നിങ്ങളുടെ അഭിപ്രായം സഹായിക്കുന്നു', compTitle:'അഭിനന്ദനങ്ങൾ!', compSub:'നിങ്ങൾ ഇപ്പോൾ ഒരു സഖി!', nextStudent:'അടുത്ത വിദ്യാർഥി 👤', restart:'വീണ്ടും തുടങ്ങൂ 🔄', share:'സുഹൃത്തുക്കളോടു പറയൂ 💌' },
+};
+
+// ═══════════════════════════════════════════
+//  7. CHAPTER CONTENT
+// ═══════════════════════════════════════════
+const CHAPTER_META = [
+  { icon:'🌺', bg:'linear-gradient(135deg,rgba(245,158,11,.25),rgba(245,158,11,.05))', iconBg:'rgba(245,158,11,.2)' },
+  { icon:'🧴', bg:'linear-gradient(135deg,rgba(15,118,110,.25),rgba(15,118,110,.05))', iconBg:'rgba(15,118,110,.2)' },
+  { icon:'💜', bg:'linear-gradient(135deg,rgba(107,33,168,.25),rgba(107,33,168,.05))', iconBg:'rgba(107,33,168,.2)' },
+  { icon:'🎮', bg:'linear-gradient(135deg,rgba(225,29,72,.2),rgba(225,29,72,.05))',   iconBg:'rgba(225,29,72,.2)' },
+  { icon:'⚖️', bg:'linear-gradient(135deg,rgba(94,234,212,.15),rgba(94,234,212,.03))',iconBg:'rgba(94,234,212,.15)' },
+];
+
+// Lesson steps for chapters 0-2 and 4 (chapter 3 is quiz-only)
+const LESSONS = {
+  en: [
+    // Chapter 0: Understanding
+    [
+      { type:'card', accent:'#f59e0b', em:'🌺', h:'What is Menstruation?', t:'Every month, your body prepares to grow a baby. When that doesn\'t happen, the lining of your uterus gently releases — this is your period. It is your body working perfectly.' },
+      { type:'facts', h:'Quick Facts', facts:[{em:'📅',t:'Lasts 3–7 days'},{em:'🔁',t:'Every 28–35 days'},{em:'👧',t:'Starts age 10–15'},{em:'💪',t:'100% normal & healthy'}] },
+      { type:'card', accent:'#e11d48', em:'💡', h:'Why Does It Happen?', t:'Your ovaries release an egg each month. If the egg is not fertilised, the body sheds the lining through blood. This is called menstruation, periods, or menses. Different words — same beautiful, natural process.' },
+      { type:'card', accent:'#6b21a8', em:'🌍', h:'Every Girl, Everywhere', t:'Around 800 million people menstruate every single day. From India to Brazil, from Scotland to Nigeria — periods are universal. You are part of something vast and beautiful.' },
+    ],
+    // Chapter 1: Hygiene
+    [
+      { type:'card', accent:'#0f766e', em:'🧴', h:'Why Hygiene Matters', t:'During your period, staying clean prevents infection, discomfort, and odour. Good hygiene means you can go to school, play, work — and live your full life, every single day.' },
+      { type:'dodont', h:'Do\'s & Don\'ts', dos:['Change your pad every 4–6 hours','Wash hands before and after changing','Use clean cloth, dried in full sunlight','Bathe daily — periods are not a reason to stop','Dispose pads wrapped in paper or bag'], donts:['Use the same pad for more than 8 hours','Use dirty or damp cloth','Throw pads in open areas or drains','Skip school or activities due to periods','Ignore heavy bleeding or severe pain'] },
+      { type:'card', accent:'#6b21a8', em:'🧺', h:'When There Are No Pads', t:'A clean cotton cloth folded tightly works well. Wash it with soap, dry in direct sunlight (sunlight kills bacteria), and fold fresh for next use. You are resourceful and capable — resources do not define your health.' },
+    ],
+    // Chapter 2: Emotions & Myths
+    [
+      { type:'card', accent:'#6b21a8', em:'💜', h:'Your Feelings Are Valid', t:'Scared. Embarrassed. Confused. Relieved. Every one of these feelings is completely okay. Most girls feel at least two of these on their first period. You are not strange — you are human.' },
+      { type:'myths', h:'Myth vs Truth', myths:[
+        { f:'Periods are dirty or impure', tr:'Periods are a sign your body is perfectly healthy and working' },
+        { f:'Don\'t go to school or temple during periods', tr:'You can do everything normally — study, pray, swim, dance, run' },
+        { f:'Don\'t talk about periods — it\'s shameful', tr:'Talking is how we learn, heal, and protect each other' },
+        { f:'Period blood is different from regular blood', tr:'It is the same blood — mixed with uterine lining tissue' },
+      ]},
+      { type:'card', accent:'#e11d48', em:'🤝', h:'Who Can You Talk To?', t:'Mother, older sister, aunt, female teacher, school nurse, ANM worker. If no one around feels safe — there are free helplines, NGOs, and health workers in every district. You always have someone.' },
+    ],
+    // Chapter 3: Quiz (handled separately)
+    null,
+    // Chapter 4: Rights
+    [
+      { type:'card', accent:'#5eead4', em:'⚖️', h:'You Have Rights', t:'In India, the Right to Health means every girl deserves access to sanitary products, clean toilets, and health information. Under the RKSK programme, adolescent health services are free at government health centres.' },
+      { type:'card', accent:'#f59e0b', em:'🏫', h:'At School', t:'Schools in India must provide separate clean toilets for girls. Many provide free sanitary pads under state schemes. If your school doesn\'t — you have the right to ask. Speak to your health teacher or principal.' },
+      { type:'card', accent:'#6b21a8', em:'🌟', h:'You Are Powerful', t:'Knowing your rights, your body, and your needs makes you powerful. Share what you have learned today with one friend, one sister, one mother. Knowledge multiplies when shared.' },
+    ],
+  ],
+  hi: [
+    [
+      { type:'card', accent:'#f59e0b', em:'🌺', h:'माहवारी क्या है?', t:'हर महीने आपका शरीर एक बच्चे को जन्म देने की तैयारी करता है। जब ऐसा नहीं होता, तो गर्भाशय की परत खून के रूप में बाहर निकलती है — यही माहवारी है। यह आपके शरीर का स्वस्थ होने का प्रमाण है।' },
+      { type:'facts', h:'मुख्य तथ्य', facts:[{em:'📅',t:'3–7 दिन चलती है'},{em:'🔁',t:'हर 28–35 दिन'},{em:'👧',t:'10–15 साल में शुरू'},{em:'💪',t:'100% सामान्य और स्वस्थ'}] },
+      { type:'card', accent:'#e11d48', em:'💡', h:'ऐसा क्यों होता है?', t:'आपके अंडाशय हर महीने एक अंडा छोड़ते हैं। अगर अंडे को शुक्राणु नहीं मिलता, तो शरीर गर्भाशय की परत को खून के रूप में बाहर निकाल देता है। यह एक सुंदर, प्राकृतिक प्रक्रिया है।' },
+      { type:'card', accent:'#6b21a8', em:'🌍', h:'हर जगह, हर लड़की', t:'दुनिया में हर दिन 80 करोड़ से अधिक लोगों को माहवारी होती है — भारत से ब्राजील तक, स्कॉटलैंड से नाइजीरिया तक। आप एक विशाल और सुंदर समूह का हिस्सा हैं।' },
+    ],
+    [
+      { type:'card', accent:'#0f766e', em:'🧴', h:'स्वच्छता क्यों ज़रूरी है', t:'माहवारी के दौरान साफ रहने से संक्रमण, परेशानी और बदबू से बचा जा सकता है। अच्छी स्वच्छता का मतलब है कि आप स्कूल जा सकती हैं, खेल सकती हैं — हर दिन अपना पूरा जीवन जी सकती हैं।' },
+      { type:'dodont', h:'क्या करें और क्या न करें', dos:['हर 4-6 घंटे में पैड बदलें','पैड बदलने से पहले और बाद में हाथ धोएं','साफ कपड़े को धूप में सुखाएं','रोज नहाएं — माहवारी नहाने से रोकने का कारण नहीं','पैड को कागज में लपेटकर फेंकें'], donts:['8 घंटे से ज़्यादा एक पैड न रखें','गंदे या गीले कपड़े का उपयोग न करें','खुले में पैड न फेंकें','माहवारी की वजह से स्कूल न छोड़ें','बहुत ज़्यादा दर्द या खून को नज़रअंदाज़ न करें'] },
+      { type:'card', accent:'#6b21a8', em:'🧺', h:'अगर पैड न हो?', t:'साफ सूती कपड़े को मोड़कर भी उपयोग किया जा सकता है। साबुन से धोएं, सीधी धूप में सुखाएं (धूप बैक्टीरिया को मारती है), और अगली बार के लिए तैयार रखें। आप साधनसंपन्न और सक्षम हैं।' },
+    ],
+    [
+      { type:'card', accent:'#6b21a8', em:'💜', h:'आपकी भावनाएं सही हैं', t:'डर, शर्म, उलझन, राहत — ये सभी भावनाएं बिल्कुल ठीक हैं। पहली माहवारी पर अधिकांश लड़कियां इनमें से कम से कम दो भावनाएं महसूस करती हैं। आप अजीब नहीं हैं — आप इंसान हैं।' },
+      { type:'myths', h:'मिथक vs सच्चाई', myths:[
+        { f:'माहवारी गंदी या अपवित्र है', tr:'माहवारी यह दर्शाती है कि आपका शरीर पूरी तरह स्वस्थ है' },
+        { f:'माहवारी में स्कूल या मंदिर नहीं जाना चाहिए', tr:'आप सब कुछ सामान्य रूप से कर सकती हैं — पढ़ना, प्रार्थना, तैरना, नाचना' },
+        { f:'माहवारी के बारे में बात करना शर्मनाक है', tr:'बात करना ही सीखने, ठीक होने और एक-दूसरे की रक्षा का तरीका है' },
+        { f:'माहवारी का खून अलग होता है', tr:'यह वही खून है — गर्भाशय की परत के साथ मिला हुआ' },
+      ]},
+      { type:'card', accent:'#e11d48', em:'🤝', h:'किससे बात करें?', t:'माँ, बड़ी बहन, चाची, महिला शिक्षिका, स्कूल नर्स, ANM कार्यकर्ता। अगर कोई पास में सुरक्षित न लगे — हर जिले में मुफ्त हेल्पलाइन, NGO और स्वास्थ्य कार्यकर्ता हैं। आपके पास हमेशा कोई न कोई है।' },
+    ],
+    null,
+    [
+      { type:'card', accent:'#5eead4', em:'⚖️', h:'आपके अधिकार हैं', t:'भारत में स्वास्थ्य का अधिकार का मतलब है कि हर लड़की को सैनिटरी उत्पाद, साफ शौचालय और स्वास्थ्य जानकारी मिलने का अधिकार है। RKSK कार्यक्रम के तहत किशोर स्वास्थ्य सेवाएं सरकारी स्वास्थ्य केंद्रों पर मुफ्त हैं।' },
+      { type:'card', accent:'#f59e0b', em:'🏫', h:'स्कूल में', t:'भारत में स्कूलों को लड़कियों के लिए अलग, साफ शौचालय प्रदान करने होते हैं। कई स्कूल राज्य योजनाओं के तहत मुफ्त सैनिटरी पैड देते हैं। अगर आपका स्कूल नहीं देता — तो आपको मांगने का अधिकार है।' },
+      { type:'card', accent:'#6b21a8', em:'🌟', h:'आप शक्तिशाली हैं', t:'अपने अधिकार, अपना शरीर, और अपनी ज़रूरतें जानना आपको शक्तिशाली बनाता है। आज जो सीखा उसे एक दोस्त, एक बहन, एक माँ के साथ साझा करें। ज्ञान बांटने से बढ़ता है।' },
+    ],
+  ],
+};
+// For other languages, fall back to English lessons
+function getLessons(lang, chapter) {
+  const src = LESSONS[lang] || LESSONS.en;
+  return src[chapter] || LESSONS.en[chapter];
+}
+
+// ═══════════════════════════════════════════
+//  8. QUIZ DATA (Chapter 3)
+// ═══════════════════════════════════════════
+const QUIZ_DATA = {
+  en: [
+    {
+      scene:{ av:'👧', name:'Priya · Age 13', text:'I woke up and found blood on my clothes. I\'m at school and I feel scared and ashamed. What should I do?' },
+      q:'What is the BEST thing for Priya to do right now?',
+      choices:[
+        { em:'🙈', t:'Hide in the toilet all day and miss class', type:'bad',  fb:{ cls:'bad',  em:'😔', title:'This hurts Priya more', fact:'Hiding means missing school and feeling worse. Priya deserves support, not isolation!' }},
+        { em:'🤫', t:'Tie a sweater around her waist and say nothing', type:'ok', fb:{ cls:'ok', em:'🤔', title:'A small step, but not enough', fact:'This is temporary. Priya needs a pad and real support from a trusted adult.' }},
+        { em:'🌟', t:'Quietly tell a trusted female teacher', type:'good', fb:{ cls:'good', em:'🌟', title:'Yes! This is brave and right!', fact:'Teachers can provide pads and reassurance. Asking for help is a superpower, not a weakness!' }},
+      ]
+    },
+    {
+      scene:{ av:'🧑', name:'Meena · Age 12', text:'My friend has been using the same cloth for 2 days. She says it\'s fine. Is it?' },
+      q:'What should Meena tell her friend?',
+      choices:[
+        { em:'👍', t:'Yes, it\'s fine — no need to change it', type:'bad', fb:{ cls:'bad', em:'😔', title:'This can cause infection!', fact:'Unchanged pads or cloth cause bacteria, bad odour, and infections. Always change every 4–6 hours.' }},
+        { em:'🧺', t:'Wash it with soap and dry in sunlight', type:'good', fb:{ cls:'good', em:'🌟', title:'Perfect! Sunlight kills germs!', fact:'Soap + direct sunlight effectively kills bacteria. A clean, dry cloth is safe and free!' }},
+        { em:'🤷', t:'Ignore it — not her problem', type:'bad', fb:{ cls:'bad', em:'😔', title:'True friends speak up!', fact:'Sharing health knowledge protects everyone. Silence can allow preventable illness.' }},
+      ]
+    },
+    {
+      scene:{ av:'👩', name:'Asha · Age 15', text:'My classmates say I shouldn\'t come to school during my period. They say it\'s shameful and others will know.' },
+      q:'What should Asha do?',
+      choices:[
+        { em:'🏠', t:'Stay home and miss school', type:'bad', fb:{ cls:'bad', em:'😔', title:'Missing school harms Asha\'s future', fact:'Periods are not a reason to miss school. Education is every girl\'s right, every single day.' }},
+        { em:'😢', t:'Go to school feeling ashamed and hiding', type:'ok', fb:{ cls:'ok', em:'🤔', title:'Going is right — but shame is not needed!', fact:'Going is correct! But Asha should feel proud, not ashamed. Periods are natural and normal.' }},
+        { em:'💪', t:'Go confidently — periods don\'t stop her!', type:'good', fb:{ cls:'good', em:'🌟', title:'YES! That\'s the spirit!', fact:'Periods do not stop you from anything. Asha belongs in school, and her presence breaks the stigma!' }},
+      ]
+    },
+    {
+      scene:{ av:'🧒', name:'Kavya · Age 11', text:'I got my first period and I\'m terrified. I don\'t know who to tell or what to do.' },
+      q:'Who is the BEST person for Kavya to go to first?',
+      choices:[
+        { em:'🤐', t:'Tell nobody and figure it out alone', type:'bad', fb:{ cls:'bad', em:'😔', title:'No one should face this alone!', fact:'Getting a first period is a milestone — it deserves care and support. Please ask for help.' }},
+        { em:'👧', t:'Tell her best friend secretly', type:'ok', fb:{ cls:'ok', em:'🤔', title:'Friends help — but an adult is better!', fact:'A friend is kind, but a trusted adult can provide pads, medical advice, and real support.' }},
+        { em:'👩', t:'Tell her mother, aunt, or female teacher', type:'good', fb:{ cls:'good', em:'🌟', title:'Exactly right! Trusted adults help most!', fact:'A trusted adult woman — mother, aunt, teacher — can provide immediate help, pads, and reassurance.' }},
+      ]
+    },
+  ],
+  hi: [
+    {
+      scene:{ av:'👧', name:'प्रिया · उम्र 13', text:'मुझे सुबह उठकर कपड़ों पर खून मिला। मैं स्कूल में हूँ और डरी हुई हूँ। मुझे क्या करना चाहिए?' },
+      q:'अभी प्रिया के लिए सबसे अच्छा क्या है?',
+      choices:[
+        { em:'🙈', t:'पूरे दिन बाथरूम में छुपना', type:'bad', fb:{ cls:'bad', em:'😔', title:'इससे प्रिया को और नुकसान होगा', fact:'छुपने से स्कूल छूटेगा और बुरा लगेगा। प्रिया को मदद की ज़रूरत है, अकेलेपन की नहीं!' }},
+        { em:'🤫', t:'स्वेटर बांधकर चुप रहना', type:'ok', fb:{ cls:'ok', em:'🤔', title:'थोड़ा सही, पर काफी नहीं', fact:'यह अस्थायी है। प्रिया को पैड और किसी भरोसेमंद की मदद चाहिए।' }},
+        { em:'🌟', t:'किसी भरोसेमंद महिला शिक्षिका को बताना', type:'good', fb:{ cls:'good', em:'🌟', title:'हाँ! यह बहादुरी है!', fact:'शिक्षिका पैड और मदद दे सकती हैं। मदद माँगना कमज़ोरी नहीं, ताकत है!' }},
+      ]
+    },
+    {
+      scene:{ av:'🧑', name:'मीना · उम्र 12', text:'मेरी सहेली 2 दिनों से एक ही कपड़ा इस्तेमाल कर रही है। वो कहती है ठीक है। क्या सच में ठीक है?' },
+      q:'मीना को क्या कहना चाहिए?',
+      choices:[
+        { em:'👍', t:'हाँ, ठीक है — बदलने की ज़रूरत नहीं', type:'bad', fb:{ cls:'bad', em:'😔', title:'इससे संक्रमण हो सकता है!', fact:'न बदलने से बैक्टीरिया, बदबू और संक्रमण होता है। हर 4-6 घंटे में बदलें।' }},
+        { em:'🧺', t:'साबुन से धोएं और धूप में सुखाएं', type:'good', fb:{ cls:'good', em:'🌟', title:'बिल्कुल सही! धूप कीटाणु मारती है!', fact:'साबुन और सीधी धूप बैक्टीरिया को मारती है। साफ, सूखा कपड़ा सुरक्षित है!' }},
+        { em:'🤷', t:'ध्यान मत दो — मेरी समस्या नहीं', type:'bad', fb:{ cls:'bad', em:'😔', title:'सच्ची सहेली बोलती है!', fact:'स्वास्थ्य की जानकारी साझा करना सभी को सुरक्षित रखता है।' }},
+      ]
+    },
+    {
+      scene:{ av:'👩', name:'आशा · उम्र 15', text:'मेरी सहेलियाँ कहती हैं माहवारी में स्कूल नहीं आना चाहिए। उनका कहना है यह शर्मनाक है।' },
+      q:'आशा को क्या करना चाहिए?',
+      choices:[
+        { em:'🏠', t:'घर रहना और स्कूल छोड़ना', type:'bad', fb:{ cls:'bad', em:'😔', title:'स्कूल छोड़ना नुकसानदायक है', fact:'माहवारी स्कूल न जाने का कारण नहीं है। शिक्षा हर लड़की का अधिकार है।' }},
+        { em:'😢', t:'शर्म महसूस करते हुए जाना', type:'ok', fb:{ cls:'ok', em:'🤔', title:'जाना सही है — पर शर्म नहीं!', fact:'जाना बिल्कुल सही है! पर आशा को गर्व होना चाहिए, शर्म नहीं।' }},
+        { em:'💪', t:'आत्मविश्वास से स्कूल जाना!', type:'good', fb:{ cls:'good', em:'🌟', title:'हाँ! यही सही है!', fact:'माहवारी आपको कुछ भी करने से नहीं रोकती। आशा का स्कूल में होना ज़रूरी है!' }},
+      ]
+    },
+    {
+      scene:{ av:'🧒', name:'कावya · उम्र 11', text:'मुझे पहली बार माहवारी हुई और मैं बहुत डरी हुई हूँ। मुझे नहीं पता किसे बताऊं।' },
+      q:'सबसे पहले कावया को किसके पास जाना चाहिए?',
+      choices:[
+        { em:'🤐', t:'किसी को न बताएं और खुद सुलझाएं', type:'bad', fb:{ cls:'bad', em:'😔', title:'कोई अकेले नहीं रहना चाहिए!', fact:'पहली माहवारी एक महत्वपूर्ण पल है — इसे देखभाल और सहारे की ज़रूरत है।' }},
+        { em:'👧', t:'चुपके से अपनी सबसे अच्छी सहेली को बताएं', type:'ok', fb:{ cls:'ok', em:'🤔', title:'सहेली मदद करती है — पर बड़े बेहतर!', fact:'सहेली दयालु है, पर कोई भरोसेमंद बड़ी महिला पैड, चिकित्सा सलाह और असली मदद दे सकती है।' }},
+        { em:'👩', t:'माँ, चाची, या महिला शिक्षिका को बताएं', type:'good', fb:{ cls:'good', em:'🌟', title:'बिल्कुल सही!', fact:'कोई भरोसेमंद महिला — माँ, चाची, शिक्षिका — तुरंत मदद, पैड और सहारा दे सकती है।' }},
+      ]
+    },
+  ],
+};
+function getQuiz(lang) { return QUIZ_DATA[lang] || QUIZ_DATA.en; }
+
+// ═══════════════════════════════════════════
+//  9. STATE
+// ═══════════════════════════════════════════
+let SESSION = { school:'', cls:'', name:'Student', teacher:false };
+let S = {
+  uid: null, lang: 'en', sc: 'en-US',
+  chapters: [false,false,false,false,false],
+  points: 0, sessions: 0,
+  curChapter: 0, lessonStep: 0,
+  quizIdx: 0, curRating: null,
+};
+function tx(k) { return (T[S.lang]||T.en)[k]; }
+
+// ═══════════════════════════════════════════
+//  10. PERSISTENCE
+// ═══════════════════════════════════════════
+function saveState() {
+  store.set('sakhi_s', JSON.stringify({ lang:S.lang,sc:S.sc,chapters:S.chapters,points:S.points,sessions:S.sessions }));
+  store.set('sakhi_sess', JSON.stringify(SESSION));
+}
+function loadState() {
+  try { const r=store.get('sakhi_s'); if(r){const p=JSON.parse(r);S.lang=p.lang||'en';S.sc=p.sc||'en-US';S.chapters=p.chapters||[false,false,false,false,false];S.points=p.points||0;S.sessions=p.sessions||0;} } catch(e){}
+  try { const r=store.get('sakhi_sess'); if(r){SESSION=JSON.parse(r);} } catch(e){}
+}
+
+// ═══════════════════════════════════════════
+//  11. OFFLINE QUEUE
+// ═══════════════════════════════════════════
+let _online = navigator.onLine;
+window.addEventListener('online',  () => { _online=true;  document.getElementById('offline-bar').classList.remove('show'); setTimeout(flushQueue,1000); });
+window.addEventListener('offline', () => { _online=false; document.getElementById('offline-bar').classList.add('show'); });
+
+function qPush(p) { const q=JSON.parse(store.get('sakhi_q')||'[]'); p._ts=Date.now(); q.push(p); store.set('sakhi_q',JSON.stringify(q.slice(-100))); }
+async function flushQueue() {
+  if(!API_URL.includes('YOUR_APPS')) {
+    const q=JSON.parse(store.get('sakhi_q')||'[]'); if(!q.length) return;
+    const failed=[]; let sent=0;
+    for(const p of q){ try{ await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}); sent++; }catch(e){failed.push(p);} }
+    store.set('sakhi_q',JSON.stringify(failed));
+    if(sent) toast('✅ '+sent+' records synced');
+  }
+}
+async function sendData(payload) {
+  payload.school=SESSION.school; payload.class=SESSION.cls; payload.studentName=SESSION.name; payload.userId=S.uid; payload.lang=S.lang;
+  if(API_URL.includes('YOUR_APPS')||!_online){ qPush(payload); return; }
+  try{ await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); }
+  catch(e){ qPush(payload); }
+}
+
+// ═══════════════════════════════════════════
+//  12. SPEECH
+// ═══════════════════════════════════════════
+function speak(text,lang) {
+  return new Promise(res => {
+    if(!window.speechSynthesis||SESSION.teacher){res();return;}
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=lang||S.sc; u.rate=0.88; u.pitch=1.04;
+    u.onend=res; u.onerror=res;
+    setTimeout(()=>window.speechSynthesis.speak(u),80);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  13. HELPERS
+// ═══════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen,.screen-scroll').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(id);
+  if(el){ el.classList.add('active'); el.scrollTop=0; }
+}
+function toast(msg, dur=2800) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),dur);
+}
+function animGSAP(el, from, to) {
+  if(typeof gsap!=='undefined') gsap.fromTo(el,from,{...to,duration:to.duration||.5,ease:to.ease||'power2.out'});
+}
+
+// ═══════════════════════════════════════════
+//  14. INIT
+// ═══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  loadState();
+  // UID
+  let uid=store.get('sakhi_uid');
+  if(!uid){uid='u_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);store.set('sakhi_uid',uid);}
+  S.uid=uid;
+  // Offline check
+  if(!navigator.onLine) document.getElementById('offline-bar').classList.add('show');
+  // Build lang grid
+  buildLangGrid();
+  // Pre-fill setup if returning
+  if(SESSION.school){ document.getElementById('inp-school').value=SESSION.school; document.getElementById('inp-class').value=SESSION.cls; document.getElementById('inp-name').value=SESSION.name==='Student'?'':SESSION.name; document.getElementById('toggle-teacher').checked=SESSION.teacher; }
+  // Loading → Hero after short delay
+  setTimeout(()=>{
+    showScreen('s-hero');
+    // Animate with GSAP if available
+    if(typeof gsap!=='undefined'){
+      gsap.from('.hero-content > *',{y:40,opacity:0,stagger:.15,duration:.9,ease:'power3.out',delay:.2});
+    }
+  }, 1800);
+});
+
+// ═══════════════════════════════════════════
+//  15. LANGUAGE SCREEN
+// ═══════════════════════════════════════════
+function buildLangGrid() {
+  const grid=document.getElementById('lang-grid');
+  grid.innerHTML=LANGS.map(l=>`
+    <div class="lang-card" id="lc-${l.code}" onclick="selectLang('${l.code}','${l.sc}',this)">
+      <div class="lang-playing-dot"></div>
+      <span class="lang-em">${l.em}</span>
+      <div class="lang-name">${l.native}</div>
+      <div class="lang-roman">${l.roman}</div>
+    </div>`).join('');
+  // Restore selection
+  if(S.lang) { const el=document.getElementById('lc-'+S.lang); if(el){ el.classList.add('selected'); document.getElementById('lang-go-btn').classList.add('show'); } }
+}
+
+function goToLang() {
+  showScreen('s-lang');
+  if(!SESSION.teacher) autoPlayGreetings();
+}
+
+let _greetPlaying=false;
+async function autoPlayGreetings() {
+  if(_greetPlaying) return; _greetPlaying=true;
+  for(const l of LANGS){
+    const card=document.getElementById('lc-'+l.code);
+    if(card) card.classList.add('playing');
+    await speak(l.greet,l.sc);
+    if(card) card.classList.remove('playing');
+    await new Promise(r=>setTimeout(r,120));
+    if(!_greetPlaying) break;
+  }
+  _greetPlaying=false;
+}
+
+function selectLang(code,sc,el) {
+  _greetPlaying=false; window.speechSynthesis&&window.speechSynthesis.cancel();
+  S.lang=code; S.sc=sc;
+  document.querySelectorAll('.lang-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  const l=LANGS.find(x=>x.code===code);
+  if(l) speak(l.greet,sc);
+  const btn=document.getElementById('lang-go-btn');
+  btn.textContent=(tx('continue')||'Continue')+' →';
+  btn.classList.add('show');
+  saveState();
+}
+
+function afterLang() {
+  const anySelected=document.querySelector('.lang-card.selected');
+  if(!anySelected){ toast('⚠️ Please tap a language first'); return; }
+  // Update UI labels
+  applyTranslations();
+  // Go to setup or map
+  showScreen('s-setup');
+  applyLangToSetup();
+}
+
+function applyTranslations() {
+  document.getElementById('setup-title').textContent=tx('setupTitle')||'School Setup';
+  document.getElementById('setup-sub').textContent=tx('setupSub')||'Help us personalize your journey';
+  document.getElementById('lbl-school').innerHTML=(tx('lblSchool')||'🏫 School Name');
+  document.getElementById('lbl-class').innerHTML=(tx('lblClass')||'📚 Class / Grade');
+  document.getElementById('lbl-name').innerHTML=(tx('lblName')||'👤 Your Name')+' <span style="text-transform:none;font-weight:400;opacity:.6">(optional)</span>';
+}
+function applyLangToSetup() { applyTranslations(); }
+
+// ═══════════════════════════════════════════
+//  16. SETUP
+// ═══════════════════════════════════════════
+function submitSetup() {
+  const school=document.getElementById('inp-school').value.trim();
+  const cls=document.getElementById('inp-class').value;
+  const name=document.getElementById('inp-name').value.trim();
+  if(!school){ markError('inp-school'); toast('⚠️ Please enter school name'); return; }
+  if(!cls){ markError('inp-class'); toast('⚠️ Please select a class'); return; }
+  SESSION.school=school; SESSION.cls=cls; SESSION.name=name||'Student'; SESSION.teacher=document.getElementById('toggle-teacher').checked;
+  saveState();
+  buildMap(); showScreen('s-map');
+}
+function skipSetup() {
+  SESSION.school='Independent'; SESSION.cls='General'; SESSION.name='Student'; SESSION.teacher=false;
+  saveState(); buildMap(); showScreen('s-map');
+}
+function markError(id) {
+  const el=document.getElementById(id);
+  el.classList.add('error');
+  setTimeout(()=>el.classList.remove('error'),1000);
+}
+
+// ═══════════════════════════════════════════
+//  17. MODULE MAP
+// ═══════════════════════════════════════════
+function buildMap() {
+  S.sessions++;
+  // Teacher banner
+  const banner=document.getElementById('teacher-banner');
+  const info=document.getElementById('teacher-info');
+  if(SESSION.teacher){ banner.classList.add('show'); info.textContent=`${SESSION.school} · ${SESSION.cls}`; }
+  else banner.classList.remove('show');
+  // Hero text
+  document.getElementById('map-greeting').textContent=tx('mapGreet')||'Welcome';
+  document.getElementById('map-title').textContent=tx('mapTitle')||'Your Sacred Journey';
+  document.getElementById('map-subtitle').textContent=tx('mapSub')||'Complete all chapters to earn your Sakhi badge';
+  // Stats
+  const done=S.chapters.filter(Boolean).length;
+  document.getElementById('stat-pts').textContent=S.points;
+  document.getElementById('stat-done').textContent=done;
+  // School pill
+  if(SESSION.school&&SESSION.school!=='Independent'){ document.getElementById('stat-school-name').textContent=SESSION.school; document.getElementById('stat-school-pill').style.display='flex'; }
+  // Progress ring
+  const pct=Math.round((done/5)*100);
+  document.getElementById('ring-pct').textContent=pct+'%';
+  const circ=2*Math.PI*42; const offset=circ*(1-done/5);
+  document.getElementById('ring-fill').style.strokeDashoffset=offset;
+  // Chapters
+  const names=tx('chapterNames')||['Ch1','Ch2','Ch3','Ch4','Ch5'];
+  const descs=tx('chapterDescs')||['','','','',''];
+  const list=document.getElementById('chapters-list');
+  list.innerHTML=CHAPTER_META.map((m,i)=>{
+    const locked=i>0&&!S.chapters[i-1];
+    const isDone=S.chapters[i];
+    return `<div class="chapter-card c${i}${locked?' locked':''}${isDone?' done':''}" onclick="${locked?'toast(\"🔒 Complete the previous chapter first\")':'openChapter('+i+')'}">
+      <div class="chapter-icon" style="background:${m.iconBg}">${m.icon}</div>
+      <div class="chapter-info">
+        <div class="chapter-num">${(tx('lessonLabels')||['CHAPTER 1','CHAPTER 2','CHAPTER 3','CHAPTER 4','CHAPTER 5'])[i]||'CHAPTER '+(i+1)}</div>
+        <div class="chapter-name">${names[i]}</div>
+        <div class="chapter-desc">${descs[i]}</div>
+      </div>
+      <div class="chapter-status">${isDone?'<div class="chapter-done-ring">✓</div>':locked?'<div class="chapter-lock">🔒</div>':'<div class="chapter-arrow">▶</div>'}</div>
+    </div>`;
+  }).join('');
+  // GSAP stagger
+  // Animate cards in — use requestAnimationFrame to ensure DOM is painted first
+  if(typeof gsap!=='undefined') {
+    requestAnimationFrame(()=>{
+      gsap.fromTo('.chapter-card',
+        {x:-16, opacity:0},
+        {x:0, opacity:1, stagger:.07, duration:.45, ease:'power2.out', clearProps:'transform,opacity'}
+      );
+    });
+  }
+  saveState();
+}
+
+// ═══════════════════════════════════════════
+//  18. LESSON ENGINE
+// ═══════════════════════════════════════════
+function openChapter(idx) {
+  S.curChapter=idx; S.lessonStep=0;
+  if(idx===3){ openQuiz(); return; }
+  document.getElementById('lesson-badge').textContent=(tx('lessonLabels')||['Chapter 1','Chapter 2','Chapter 3','Chapter 4','Chapter 5'])[idx]||'Chapter '+(idx+1);
+  renderLesson(); showScreen('s-lesson');
+}
+
+function renderLesson() {
+  const steps=getLessons(S.lang,S.curChapter)||[];
+  if(!steps||S.lessonStep>=steps.length){ completeChapter(); return; }
+  const step=steps[S.lessonStep];
+  const pct=Math.round((S.lessonStep/steps.length)*100);
+  document.getElementById('lesson-prog').style.width=pct+'%';
+  const body=document.getElementById('lesson-body');
+  body.innerHTML=buildLessonCard(step);
+  const isLast=S.lessonStep>=steps.length-1;
+  const btn=document.getElementById('lesson-next-btn');
+  btn.textContent=isLast?(tx('finish')||'Complete Chapter'):(tx('continue')||'Continue')+' →';
+  if(step.t && !SESSION.teacher) speak(step.t,S.sc);
+  // Animate
+  if(typeof gsap!=='undefined') {
+    requestAnimationFrame(()=>{
+      gsap.fromTo(Array.from(body.children),
+        {y:16, opacity:0},
+        {y:0, opacity:1, stagger:.09, duration:.4, ease:'power2.out', clearProps:'transform,opacity'}
+      );
+    });
+  }
+}
+
+function buildLessonCard(step) {
+  if(step.type==='card') return `
+    <div class="lesson-card">
+      <div class="lesson-card-accent" style="background:${step.accent}"></div>
+      <span class="lesson-illus">${step.em}</span>
+      <div class="lesson-heading">${step.h}</div>
+      <p class="lesson-text">${step.t}</p>
+    </div>`;
+  if(step.type==='facts') return `
+    <div class="lesson-card">
+      <div class="lesson-card-accent" style="background:#f59e0b"></div>
+      <div class="lesson-heading">${step.h}</div>
+      <div class="fact-grid">${step.facts.map(f=>`<div class="fact-item"><span class="fi-em">${f.em}</span><div class="fi-text">${f.t}</div></div>`).join('')}</div>
+    </div>`;
+  if(step.type==='dodont') return `
+    <div class="lesson-card">
+      <div class="lesson-card-accent" style="background:#0f766e"></div>
+      <div class="lesson-heading">${step.h}</div>
+      <div class="do-dont-list">
+        ${step.dos.map(d=>`<div class="do-row"><span class="dd-icon">✅</span><span class="dd-text">${d}</span></div>`).join('')}
+        ${step.donts.map(d=>`<div class="dont-row"><span class="dd-icon">❌</span><span class="dd-text">${d}</span></div>`).join('')}
+      </div>
+    </div>`;
+  if(step.type==='myths') return `
+    <div class="lesson-card">
+      <div class="lesson-card-accent" style="background:#6b21a8"></div>
+      <div class="lesson-heading">${step.h}</div>
+      <div class="myth-block">${step.myths.map(m=>`
+        <div class="myth-false"><span style="font-size:1.3rem;flex-shrink:0">🚫</span><div><div class="myth-tag">Myth</div><div class="myth-body">${m.f}</div></div></div>
+        <div class="myth-true"><span style="font-size:1.3rem;flex-shrink:0">💚</span><div><div class="myth-tag">Truth</div><div class="myth-body">${m.tr}</div></div></div>
+      `).join('')}</div>
+    </div>`;
+  return '';
+}
+
+function nextLessonStep() {
+  const steps=getLessons(S.lang,S.curChapter)||[];
+  S.lessonStep++;
+  if(S.lessonStep>=steps.length) completeChapter();
+  else renderLesson();
+}
+
+function completeChapter() {
+  S.chapters[S.curChapter]=true; S.points+=50; saveState();
+  sendData({type:'progress',chapter:S.curChapter,points:S.points,ts:new Date().toISOString()});
+  showRating();
+}
+
+// ═══════════════════════════════════════════
+//  19. QUIZ ENGINE
+// ═══════════════════════════════════════════
+function openQuiz() {
+  S.quizIdx=0;
+  document.getElementById('quiz-badge').textContent='Scenario Challenge';
+  renderQuiz(); showScreen('s-quiz');
+}
+
+function renderQuiz() {
+  const qs=getQuiz(S.lang);
+  if(S.quizIdx>=qs.length){ completeChapter(); return; }
+  const q=qs[S.quizIdx];
+  const pct=Math.round((S.quizIdx/qs.length)*100);
+  document.getElementById('quiz-prog').style.width=pct+'%';
+  document.getElementById('quiz-next-wrap').style.display='none';
+  document.getElementById('quiz-body').innerHTML=`
+    <div class="scene-card">
+      <div class="scene-avatar">${q.scene.av}</div>
+      <div class="scene-bubble">
+        <div class="scene-name">${q.scene.name}</div>
+        <div class="scene-text">${q.scene.text}</div>
+      </div>
+    </div>
+    <div class="quiz-q-card">
+      <div class="quiz-q-label">❓ What would you do?</div>
+      <div class="quiz-q-text">${q.q}</div>
+    </div>
+    <div class="choices-list">
+      ${q.choices.map((c,i)=>`<button class="choice-btn" id="ch-${i}" onclick="pickAnswer(${i})"><span class="choice-em">${c.em}</span><span class="choice-text">${c.t}</span></button>`).join('')}
+    </div>
+    <div class="feedback-card" id="fb-card"></div>`;
+  if(!SESSION.teacher) speak(q.scene.text,S.sc);
+  if(typeof gsap!=='undefined') {
+    requestAnimationFrame(()=>{
+      gsap.fromTo('#quiz-body > *',
+        {y:20, opacity:0},
+        {y:0, opacity:1, stagger:.09, duration:.45, ease:'power2.out', clearProps:'transform,opacity'}
+      );
+    });
+  }
+}
+
+function pickAnswer(idx) {
+  const q=getQuiz(S.lang)[S.quizIdx];
+  const ch=q.choices[idx];
+  document.querySelectorAll('.choice-btn').forEach(b=>b.disabled=true);
+  const cls=ch.type==='good'?'ans-good':ch.type==='ok'?'ans-ok':'ans-bad';
+  document.getElementById('ch-'+idx).classList.add(cls);
+  if(ch.type==='good') S.points+=30; else if(ch.type==='ok') S.points+=10;
+  saveState();
+  const fb=ch.fb;
+  const fbCard=document.getElementById('fb-card');
+  fbCard.className=`feedback-card ${fb.cls} show`;
+  fbCard.innerHTML=`<span class="fb-em">${fb.em}</span><div class="fb-title">${fb.title}</div><div class="fb-fact">${fb.fact}</div>`;
+  document.getElementById('quiz-next-wrap').style.display='block';
+  if(!SESSION.teacher) speak(fb.title+'. '+fb.fact,S.sc);
+  sendData({type:'choice',chapter:3,qIdx:S.quizIdx,choice:ch.type,points:S.points,ts:new Date().toISOString()});
+  if(typeof gsap!=='undefined') gsap.from(fbCard,{y:16,opacity:0,duration:.4,ease:'power2.out'});
+}
+
+function nextQuizQ() {
+  S.quizIdx++;
+  const qs=getQuiz(S.lang);
+  if(S.quizIdx>=qs.length) completeChapter();
+  else renderQuiz();
+}
+
+// ═══════════════════════════════════════════
+//  20. RATING
+// ═══════════════════════════════════════════
+function showRating() {
+  document.getElementById('rating-title').textContent=tx('ratingQ')||'How was this chapter?';
+  document.getElementById('rating-sub').textContent=tx('ratingSub')||'Your feedback shapes the next journey';
+  document.querySelectorAll('.r-btn').forEach(b=>b.classList.remove('sel'));
+  showScreen('s-rating');
+}
+function rate(score,btn) {
+  document.querySelectorAll('.r-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  sendData({type:'feedback',chapter:S.curChapter,rating:score,ts:new Date().toISOString()});
+  setTimeout(()=>{
+    if(S.chapters.every(Boolean)) showCompletion();
+    else { buildMap(); showScreen('s-map'); }
+  },900);
+}
+
+// ═══════════════════════════════════════════
+//  21. COMPLETION
+// ═══════════════════════════════════════════
+function showCompletion() {
+  document.getElementById('comp-title').textContent=tx('compTitle')||'You Did It!';
+  document.getElementById('comp-sub').textContent=tx('compSub')||'You are now a Sakhi!';
+  const langObj=LANGS.find(l=>l.code===S.lang);
+  document.getElementById('comp-stats').innerHTML=`
+    <div class="stats-row"><div class="sr-label">🏫 School</div><div class="sr-val">${SESSION.school||'—'}</div></div>
+    <div class="stats-row"><div class="sr-label">📚 Class</div><div class="sr-val">${SESSION.cls||'—'}</div></div>
+    <div class="stats-row"><div class="sr-label">👤 Name</div><div class="sr-val">${SESSION.name||'—'}</div></div>
+    <div class="stats-row"><div class="sr-label">🌍 Language</div><div class="sr-val">${langObj?langObj.native:S.lang}</div></div>
+    <div class="stats-row"><div class="sr-label">📚 Chapters</div><div class="sr-val">${S.chapters.filter(Boolean).length}/5 ⭐</div></div>
+    <div class="stats-row"><div class="sr-label">🏆 Points</div><div class="sr-val">${S.points}</div></div>`;
+  sendData({type:'completion',chapters:S.chapters.filter(Boolean).length,points:S.points,ts:new Date().toISOString()});
+  showScreen('s-complete');
+  if(!SESSION.teacher) speak(tx('compTitle')||'Amazing! You completed your Sakhi journey!',S.sc);
+  if(typeof gsap!=='undefined') gsap.from('.complete-wrap > *',{y:30,opacity:0,stagger:.12,duration:.6,ease:'power3.out'});
+}
+
+function nextStudent() {
+  S.uid='u_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+  store.set('sakhi_uid',S.uid);
+  S.chapters=[false,false,false,false,false]; S.points=0; S.curChapter=0; S.lessonStep=0; S.quizIdx=0;
+  SESSION.name='Student';
+  saveState();
+  document.getElementById('inp-name').value='';
+  toast('👤 Ready for next student!');
+  setTimeout(()=>showScreen('s-setup'),600);
+}
+function restartJourney() {
+  S.chapters=[false,false,false,false,false]; S.points=0; S.curChapter=0;
+  saveState(); buildMap(); showScreen('s-map');
+}
+function shareApp() {
+  const msg=`I just completed the Sakhi health journey! Learn about menstrual health: ${location.href}`;
+  if(navigator.share) navigator.share({title:'Sakhi',text:msg});
+  else navigator.clipboard?.writeText(msg).then(()=>toast('📋 Link copied!'));
+}
+// Create a sanitization helper
+function escapeHtml(str) {
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}
+
+// In showCompletion():
+document.getElementById('comp-stats').innerHTML = `
+  <div class="stats-row"><div class="sr-label">🏫 School</div><div class="sr-val">${escapeHtml(SESSION.school || '—')}</div></div>
+  <div class="stats-row"><div class="sr-label">📚 Class</div><div class="sr-val">${escapeHtml(SESSION.cls || '—')}</div></div>
+  <div class="stats-row"><div class="sr-label">👤 Name</div><div class="sr-val">${escapeHtml(SESSION.name || '—')}</div></div>
+  ...
+`;
+</script>
+</body>
+</html>
